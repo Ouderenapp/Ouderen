@@ -58,7 +58,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const users = await Promise.all(
       registrations.map(r => storage.getUser(r.userId))
     );
-    res.json(users.filter(u => u !== undefined));
+    
+    // Respecteer de anonimiteitsinstellingen van gebruikers
+    const filteredUsers = users
+      .filter(u => u !== undefined)
+      .map(user => {
+        if (user?.anonymousParticipation) {
+          // Als de gebruiker anoniem wil zijn, stuur alleen dorp en wijk
+          return {
+            id: user.id,
+            village: user.village,
+            neighborhood: user.neighborhood,
+            anonymousParticipation: true
+          };
+        } else {
+          // Anders stuur de volledige gebruikersinfo
+          return {
+            id: user?.id,
+            displayName: user?.displayName,
+            village: user?.village,
+            neighborhood: user?.neighborhood,
+            anonymousParticipation: false
+          };
+        }
+      });
+    
+    res.json(filteredUsers);
   });
 
   app.post("/api/activities/:id/register", async (req, res) => {

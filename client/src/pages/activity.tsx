@@ -154,7 +154,14 @@ export default function ActivityPage() {
                 key={attendee.id}
                 className="flex items-center space-x-2 py-2 text-lg"
               >
-                <span>{attendee.displayName}</span>
+                {attendee.anonymousParticipation ? (
+                    <div className="font-medium">Anonieme deelnemer</div>
+                  ) : (
+                    <div className="font-medium">{attendee.displayName}</div>
+                  )}
+                  <div className="text-sm text-muted-foreground">
+                    {attendee.village}, {attendee.neighborhood}
+                  </div>
               </div>
             ))}
             {!attendees?.length && (
