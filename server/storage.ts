@@ -106,7 +106,7 @@ export class DatabaseStorage implements IStorage {
     village?: string,
     neighborhood?: string
   }): Promise<User> {
-    const [user] = await this.db
+    const [user] = await db
       .update(users)
       .set(data)
       .where(eq(users.id, id))
