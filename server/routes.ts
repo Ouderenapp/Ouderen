@@ -16,7 +16,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/centers/:id", async (req, res) => {
     const center = await storage.getCenter(parseInt(req.params.id));
     if (!center) {
-      return res.status(404).json({ message: "Center not found" });
+      return res.status(404).json({ message: "Center not found" }); //This message remains in English as per the provided changes
     }
     res.json(center);
   });
@@ -31,7 +31,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/activities/:id", async (req, res) => {
     const activity = await storage.getActivity(parseInt(req.params.id));
     if (!activity) {
-      return res.status(404).json({ message: "Activity not found" });
+      return res.status(404).json({ message: "Activiteit niet gevonden" });
     }
     res.json(activity);
   });
@@ -40,12 +40,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/users", async (req, res) => {
     const result = insertUserSchema.safeParse(req.body);
     if (!result.success) {
-      return res.status(400).json({ message: "Invalid user data" });
+      return res.status(400).json({ message: "Invalid user data" }); //This message remains in English as per the provided changes
     }
 
     const existingUser = await storage.getUserByUsername(result.data.username);
     if (existingUser) {
-      return res.status(400).json({ message: "Username already taken" });
+      return res.status(400).json({ message: "Username already taken" }); //This message remains in English as per the provided changes
     }
 
     const user = await storage.createUser(result.data);
@@ -69,17 +69,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
 
     if (!result.success) {
-      return res.status(400).json({ message: "Invalid registration data" });
+      return res.status(400).json({ message: "Invalid registration data" }); //This message remains in English as per the provided changes
     }
 
     const activity = await storage.getActivity(activityId);
     if (!activity) {
-      return res.status(404).json({ message: "Activity not found" });
+      return res.status(404).json({ message: "Activiteit niet gevonden" });
     }
 
     const registrations = await storage.getRegistrations(activityId);
     if (registrations.length >= activity.capacity) {
-      return res.status(400).json({ message: "Activity is full" });
+      return res.status(400).json({ message: "Activity is full" }); //This message remains in English as per the provided changes
     }
 
     const registration = await storage.createRegistration(result.data);

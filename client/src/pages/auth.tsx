@@ -235,7 +235,7 @@ export default function AuthPage() {
                         name="neighborhood"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Wijk</FormLabel>
+                            <FormLabel>Buurt</FormLabel>
                             <FormControl>
                               <Input {...field} />
                             </FormControl>
