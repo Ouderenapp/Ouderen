@@ -46,7 +46,7 @@ export default function Profile() {
 
   // Dorpen zoeken
   const { 
-    searchResults: villageResults, 
+    searchResults: villageSearchResults, 
     isLoading: isVillageLoading, 
     error: villageError,
     searchLocations: searchVillages
@@ -55,8 +55,8 @@ export default function Profile() {
 
   // Update suggestions when results change
   useEffect(() => {
-    setVillageResults(villageResults || []);
-  }, [villageResults]);
+    setVillageResults(villageSearchResults || []);
+  }, [villageSearchResults]);
 
   useEffect(() => {
     setNeighborhoodResults(neighborhoodResults || []);
