@@ -44,13 +44,22 @@ export default function Profile() {
   } = useLocation();
   const [neighborhoodSuggestions, setNeighborhoodResults] = useState<any[]>([]);
 
+  // Dorpen zoeken
+  const { 
+    searchResults: villageResults, 
+    isLoading: isVillageLoading, 
+    error: villageError,
+    searchLocations: searchVillages
+  } = useLocation();
+  const [villageSuggestions, setVillageResults] = useState<any[]>([]);
+
   // Update suggestions when results change
   useEffect(() => {
-    setVillageResults(villageResults);
+    setVillageResults(villageResults || []);
   }, [villageResults]);
 
   useEffect(() => {
-    setNeighborhoodResults(neighborhoodResults);
+    setNeighborhoodResults(neighborhoodResults || []);
   }, [neighborhoodResults]);
 
   // Start search functions with appropriate types

@@ -15,7 +15,7 @@ export function useLocation() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
-  const searchLocations = useCallback(async (searchQuery: string) => {
+  const searchLocations = useCallback(async (searchQuery: string, type?: string) => {
     if (!searchQuery || searchQuery.length < 3) {
       setResults([]);
       return;
@@ -74,6 +74,7 @@ export function useLocation() {
     isLoading,
     error,
     handleChange,
-    searchLocations
+    searchLocations,
+    searchResults: results
   };
 }
