@@ -45,39 +45,45 @@ export default function AuthPage() {
   const [, setLocation] = useWouterLocation();
   const { user, login, register } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
-  
+
   // Dorp/stad zoeken
   const { 
-    searchResults: villageResults, 
+    searchResults: villageSearchResults, 
     isLoading: isVillageLoading, 
     error: villageError,
-    searchLocations: searchVillages 
+    searchLocations: searchVillages,
+    handleChange: handleVillageChange
   } = useLocation();
   const [villageSuggestions, setVillageResults] = useState<any[]>([]);
-  
-  // Wijken zoeken
+
+  // Wijk/buurt zoeken - met tweede instantie van useLocation
   const { 
     searchResults: neighborhoodResults, 
     isLoading: isNeighborhoodLoading, 
     error: neighborhoodError,
-    searchLocations: searchNeighborhoods
+    searchLocations: searchNeighborhoods,
+    handleChange: handleNeighborhoodChange
   } = useLocation();
   const [neighborhoodSuggestions, setNeighborhoodResults] = useState<any[]>([]);
-  
+
   // Update suggestions when results change
   useEffect(() => {
-    setVillageResults(villageResults);
-  }, [villageResults]);
-  
+    if (villageSearchResults) {
+      setVillageResults(villageSearchResults);
+    }
+  }, [villageSearchResults]);
+
   useEffect(() => {
-    setNeighborhoodResults(neighborhoodResults);
+    if (neighborhoodResults) {
+      setNeighborhoodResults(neighborhoodResults);
+    }
   }, [neighborhoodResults]);
-  
+
   // Start search functions with appropriate types
   const searchVillagesHandler = (query: string) => {
     searchVillages(query, 'village');
   };
-  
+
   const searchNeighborhoodsHandler = (query: string) => {
     searchNeighborhoods(query, 'neighborhood');
   };
