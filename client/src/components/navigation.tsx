@@ -1,13 +1,16 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Building2, Calendar, User } from "lucide-react";
+import { Building2, User } from "lucide-react";
+import { useAuth } from "@/hooks/use-auth";
+import { Button } from "./ui/button";
 
 export default function Navigation() {
   const [location] = useLocation();
+  const { user, logout } = useAuth();
 
   const links = [
-    { href: "/", label: "Centers", icon: Building2 },
-    { href: "/profile", label: "My Profile", icon: User },
+    { href: "/", label: "Activiteitencentra", icon: Building2 },
+    ...(user ? [{ href: "/profile", label: "Mijn Profiel", icon: User }] : []),
   ];
 
   return (
@@ -28,6 +31,21 @@ export default function Navigation() {
                 </a>
               </Link>
             ))}
+          </div>
+
+          <div>
+            {user ? (
+              <Button
+                variant="outline"
+                onClick={() => logout()}
+              >
+                Uitloggen
+              </Button>
+            ) : (
+              <Link href="/auth">
+                <Button>Inloggen</Button>
+              </Link>
+            )}
           </div>
         </div>
       </div>
