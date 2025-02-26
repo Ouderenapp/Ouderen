@@ -9,7 +9,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -41,19 +40,47 @@ export default function AuthPage() {
   const { user, login, register } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
 
+  const loginForm = useForm<LoginForm>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+    },
+  });
+
+  const registerForm = useForm<RegisterForm>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: "",
+      password: "",
+      displayName: "",
+      phone: "",
+    },
+  });
+
   // Redirect if already logged in
   if (user) {
     setLocation("/");
     return null;
   }
 
-  const loginForm = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-  });
+  const onLogin = async (data: LoginForm) => {
+    try {
+      await login(data);
+      setLocation("/");
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
+  };
 
-  const registerForm = useForm<RegisterForm>({
-    resolver: zodResolver(registerSchema),
-  });
+  const onRegister = async (data: RegisterForm) => {
+    try {
+      await register(data);
+      setLocation("/");
+    } catch (error) {
+      console.error("Registration failed:", error);
+    }
+  };
 
   return (
     <div className="container mx-auto flex min-h-screen items-center justify-center px-4 py-8">
@@ -77,7 +104,7 @@ export default function AuthPage() {
                 <TabsContent value="login">
                   <Form {...loginForm}>
                     <form
-                      onSubmit={loginForm.handleSubmit((data) => login(data))}
+                      onSubmit={loginForm.handleSubmit(onLogin)}
                       className="space-y-4"
                     >
                       <FormField
@@ -122,7 +149,7 @@ export default function AuthPage() {
                 <TabsContent value="register">
                   <Form {...registerForm}>
                     <form
-                      onSubmit={registerForm.handleSubmit((data) => register(data))}
+                      onSubmit={registerForm.handleSubmit(onRegister)}
                       className="space-y-4"
                     >
                       <FormField
