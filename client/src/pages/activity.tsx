@@ -36,7 +36,7 @@ export default function ActivityPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries([`/api/activities/${activityId}/registrations`]);
+      queryClient.invalidateQueries({ queryKey: [`/api/activities/${activityId}/registrations`] });
       toast({
         title: "Aanmelding geslaagd!",
         description: "U bent nu aangemeld voor deze activiteit.",
@@ -59,7 +59,7 @@ export default function ActivityPage() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries([`/api/activities/${activityId}/registrations`]);
+      queryClient.invalidateQueries({ queryKey: [`/api/activities/${activityId}/registrations`] });
       toast({
         title: "Afmelding geslaagd",
         description: "U bent afgemeld voor deze activiteit.",
