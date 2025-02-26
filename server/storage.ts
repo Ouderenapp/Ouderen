@@ -3,23 +3,25 @@ import {
   type User, type Center, type Activity, type Registration,
   type InsertUser, type InsertCenter, type InsertActivity, type InsertRegistration
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // Users
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
+
   // Centers
   getCenters(): Promise<Center[]>;
   getCenter(id: number): Promise<Center | undefined>;
   createCenter(center: InsertCenter): Promise<Center>;
-  
+
   // Activities 
   getActivities(centerId?: number): Promise<Activity[]>;
   getActivity(id: number): Promise<Activity | undefined>;
   createActivity(activity: InsertActivity): Promise<Activity>;
-  
+
   // Registrations
   getRegistrations(activityId: number): Promise<Registration[]>;
   getRegistrationsByUser(userId: number): Promise<Registration[]>;
@@ -27,141 +29,74 @@ export interface IStorage {
   deleteRegistration(userId: number, activityId: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private centers: Map<number, Center>;
-  private activities: Map<number, Activity>;
-  private registrations: Map<number, Registration>;
-  private currentIds: { [key: string]: number };
-
-  constructor() {
-    this.users = new Map();
-    this.centers = new Map();
-    this.activities = new Map();
-    this.registrations = new Map();
-    this.currentIds = { users: 1, centers: 1, activities: 1, registrations: 1 };
-
-    // Add sample data
-    this.initializeSampleData();
-  }
-
-  private initializeSampleData() {
-    // Add centers
-    const sampleCenters: InsertCenter[] = [
-      {
-        name: "Downtown Community Center",
-        address: "123 Main St",
-        description: "A welcoming space for all seniors in the heart of downtown",
-        imageUrl: "https://images.unsplash.com/photo-1600729123691-f884cefc5cc2"
-      },
-      {
-        name: "Riverside Senior Center",
-        address: "456 River Rd",
-        description: "Beautiful facility overlooking the river with modern amenities",
-        imageUrl: "https://images.unsplash.com/photo-1566822175646-47404f1431d3"
-      }
-    ];
-
-    sampleCenters.forEach(center => this.createCenter(center));
-
-    // Add activities
-    const sampleActivities: InsertActivity[] = [
-      {
-        centerId: 1,
-        name: "Morning Yoga",
-        description: "Gentle yoga suitable for all levels",
-        imageUrl: "https://images.unsplash.com/photo-1472066719480-ecc7314ed065",
-        date: new Date("2024-04-01T09:00:00"),
-        capacity: 20
-      },
-      {
-        centerId: 1,
-        name: "Art Workshop",
-        description: "Express yourself through painting and drawing",
-        imageUrl: "https://images.unsplash.com/photo-1598285721150-ba05782126c3",
-        date: new Date("2024-04-02T14:00:00"),
-        capacity: 15
-      }
-    ];
-
-    sampleActivities.forEach(activity => this.createActivity(activity));
-  }
-
+export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentIds.users++;
-    const user = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
 
   async getCenters(): Promise<Center[]> {
-    return Array.from(this.centers.values());
+    return await db.select().from(centers);
   }
 
   async getCenter(id: number): Promise<Center | undefined> {
-    return this.centers.get(id);
+    const [center] = await db.select().from(centers).where(eq(centers.id, id));
+    return center;
   }
 
   async createCenter(insertCenter: InsertCenter): Promise<Center> {
-    const id = this.currentIds.centers++;
-    const center = { ...insertCenter, id };
-    this.centers.set(id, center);
+    const [center] = await db.insert(centers).values(insertCenter).returning();
     return center;
   }
 
   async getActivities(centerId?: number): Promise<Activity[]> {
-    const activities = Array.from(this.activities.values());
-    return centerId ? activities.filter(a => a.centerId === centerId) : activities;
+    if (centerId) {
+      return await db.select().from(activities).where(eq(activities.centerId, centerId));
+    }
+    return await db.select().from(activities);
   }
 
   async getActivity(id: number): Promise<Activity | undefined> {
-    return this.activities.get(id);
+    const [activity] = await db.select().from(activities).where(eq(activities.id, id));
+    return activity;
   }
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
-    const id = this.currentIds.activities++;
-    const activity = { ...insertActivity, id };
-    this.activities.set(id, activity);
+    const [activity] = await db.insert(activities).values(insertActivity).returning();
     return activity;
   }
 
   async getRegistrations(activityId: number): Promise<Registration[]> {
-    return Array.from(this.registrations.values()).filter(
-      r => r.activityId === activityId
-    );
+    return await db.select().from(registrations).where(eq(registrations.activityId, activityId));
   }
 
   async getRegistrationsByUser(userId: number): Promise<Registration[]> {
-    return Array.from(this.registrations.values()).filter(
-      r => r.userId === userId
-    );
+    return await db.select().from(registrations).where(eq(registrations.userId, userId));
   }
 
   async createRegistration(insertRegistration: InsertRegistration): Promise<Registration> {
-    const id = this.currentIds.registrations++;
-    const registration = { ...insertRegistration, id };
-    this.registrations.set(id, registration);
+    const [registration] = await db.insert(registrations).values(insertRegistration).returning();
     return registration;
   }
 
   async deleteRegistration(userId: number, activityId: number): Promise<void> {
-    const registration = Array.from(this.registrations.values()).find(
-      r => r.userId === userId && r.activityId === activityId
+    await db.delete(registrations).where(
+      and(
+        eq(registrations.userId, userId),
+        eq(registrations.activityId, activityId)
+      )
     );
-    if (registration) {
-      this.registrations.delete(registration.id);
-    }
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
