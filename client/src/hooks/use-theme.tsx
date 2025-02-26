@@ -23,14 +23,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Save preference to localStorage when it changes
     localStorage.setItem("accessibility-mode", theme.isAccessibilityMode.toString());
-    
+
     // Update CSS custom properties for accessibility
     if (theme.isAccessibilityMode) {
       document.documentElement.style.setProperty("--font-size-multiplier", "1.25");
       document.documentElement.style.setProperty("--contrast-multiplier", "1.3");
+      document.documentElement.setAttribute("data-accessibility-mode", "true");
     } else {
       document.documentElement.style.setProperty("--font-size-multiplier", "1");
       document.documentElement.style.setProperty("--contrast-multiplier", "1");
+      document.documentElement.removeAttribute("data-accessibility-mode");
     }
   }, [theme.isAccessibilityMode]);
 

@@ -114,7 +114,7 @@ export default function Profile() {
               onRegister={() => {}}
             />
           ))}
-          {myActivities?.length === 0 && (
+          {(!myActivities || myActivities.length === 0) && (
             <p className="col-span-2 text-center text-lg text-muted-foreground">
               U bent nog niet aangemeld voor activiteiten
             </p>
