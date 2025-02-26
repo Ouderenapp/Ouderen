@@ -8,65 +8,20 @@ import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Activity } from "@shared/schema";
 import { Building2, MapPin, Edit, Save, X } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useLocation } from "@/hooks/use-location";
-
 
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
-    displayName: user?.displayName || "",
-    phone: user?.phone || "",
-    village: user?.village || "",
-    neighborhood: user?.neighborhood || "",
-    anonymousParticipation: user?.anonymousParticipation || false,
+    displayName: "",
+    phone: "",
+    village: "",
+    neighborhood: ""
   });
-
-  // Dorp/stad zoeken
-  const { 
-    searchResults: villageSearchResults, 
-    isLoading: isVillageLoading, 
-    error: villageError,
-    searchLocations: searchVillages,
-    handleChange: handleVillageChange
-  } = useLocation();
-  const [villageSuggestions, setVillageResults] = useState<any[]>([]);
-
-  // Wijken zoeken
-  const { 
-    searchResults: neighborhoodResults, 
-    isLoading: isNeighborhoodLoading, 
-    error: neighborhoodError,
-    searchLocations: searchNeighborhoods,
-    handleChange: handleNeighborhoodChange
-  } = useLocation();
-  const [neighborhoodSuggestions, setNeighborhoodResults] = useState<any[]>([]);
-
-  // Update suggestions when results change
-  useEffect(() => {
-    if (villageSearchResults) {
-      setVillageResults(villageSearchResults);
-    }
-  }, [villageSearchResults]);
-
-  useEffect(() => {
-    if (neighborhoodResults) {
-      setNeighborhoodResults(neighborhoodResults);
-    }
-  }, [neighborhoodResults]);
-
-  // Start search functions with appropriate types
-  const searchVillagesHandler = (query: string) => {
-    searchVillages(query, 'village');
-  };
-
-  const searchNeighborhoodsHandler = (query: string) => {
-    searchNeighborhoods(query, 'neighborhood');
-  };
 
   const { data: myActivities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: [`/api/users/${user?.id}/activities`],
@@ -88,7 +43,7 @@ export default function Profile() {
       });
     },
   });
-
+  
   const updateProfile = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (!user) return;
@@ -103,24 +58,23 @@ export default function Profile() {
       });
     },
   });
-
+  
   const handleEditClick = () => {
     if (user) {
       setFormData({
         displayName: user.displayName,
         phone: user.phone,
         village: user.village,
-        neighborhood: user.neighborhood,
-        anonymousParticipation: user.anonymousParticipation
+        neighborhood: user.neighborhood
       });
       setIsEditing(true);
     }
   };
-
+  
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
-
+  
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile.mutate(formData);
@@ -194,7 +148,7 @@ export default function Profile() {
                     required
                   />
                 </div>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefoonnummer</Label>
                   <Input 
@@ -204,45 +158,27 @@ export default function Profile() {
                     required
                   />
                 </div>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="village">Gemeente</Label>
                   <Input 
                     id="village" 
                     value={formData.village}
-                    onChange={(e) => {
-                      setFormData({...formData, village: e.target.value});
-                      searchVillagesHandler(e.target.value);
-                    }}
-                    list="village-list"
+                    onChange={(e) => setFormData({...formData, village: e.target.value})}
                     required
                   />
-                  <datalist id="village-list">
-                    {villageSuggestions.map((suggestion:any) => (
-                      <option key={suggestion.place_id} value={suggestion.display_name} />
-                    ))}
-                  </datalist>
                 </div>
-
+                
                 <div className="space-y-2">
                   <Label htmlFor="neighborhood">Wijk</Label>
                   <Input 
                     id="neighborhood" 
                     value={formData.neighborhood}
-                    onChange={(e) => {
-                      setFormData({...formData, neighborhood: e.target.value});
-                      searchNeighborhoodsHandler(e.target.value);
-                    }}
-                    list="neighborhood-list"
+                    onChange={(e) => setFormData({...formData, neighborhood: e.target.value})}
                     required
                   />
-                  <datalist id="neighborhood-list">
-                    {neighborhoodSuggestions.map((suggestion:any) => (
-                      <option key={suggestion.place_id} value={suggestion.display_name} />
-                    ))}
-                  </datalist>
                 </div>
-
+                
                 <div className="flex space-x-2 pt-2">
                   <Button type="submit" disabled={updateProfile.isPending}>
                     {updateProfile.isPending ? "Bezig..." : "Opslaan"}

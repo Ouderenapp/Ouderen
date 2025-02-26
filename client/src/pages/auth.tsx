@@ -1,7 +1,6 @@
-import { useState, useEffect } from "react";
-import { useLocation as useWouterLocation } from "wouter";
+import { useState } from "react";
+import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/use-auth";
-import { useLocation } from "@/hooks/use-location";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useForm } from "react-hook-form";
@@ -42,51 +41,9 @@ type LoginForm = z.infer<typeof loginSchema>;
 type RegisterForm = z.infer<typeof registerSchema>;
 
 export default function AuthPage() {
-  const [, setLocation] = useWouterLocation();
+  const [, setLocation] = useLocation();
   const { user, login, register } = useAuth();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
-
-  // Dorp/stad zoeken
-  const { 
-    searchResults: villageSearchResults, 
-    isLoading: isVillageLoading, 
-    error: villageError,
-    searchLocations: searchVillages,
-    handleChange: handleVillageChange
-  } = useLocation();
-  const [villageSuggestions, setVillageResults] = useState<any[]>([]);
-
-  // Wijk/buurt zoeken - met tweede instantie van useLocation
-  const { 
-    searchResults: neighborhoodResults, 
-    isLoading: isNeighborhoodLoading, 
-    error: neighborhoodError,
-    searchLocations: searchNeighborhoods,
-    handleChange: handleNeighborhoodChange
-  } = useLocation();
-  const [neighborhoodSuggestions, setNeighborhoodResults] = useState<any[]>([]);
-
-  // Update suggestions when results change
-  useEffect(() => {
-    if (villageSearchResults) {
-      setVillageResults(villageSearchResults);
-    }
-  }, [villageSearchResults]);
-
-  useEffect(() => {
-    if (neighborhoodResults) {
-      setNeighborhoodResults(neighborhoodResults);
-    }
-  }, [neighborhoodResults]);
-
-  // Start search functions with appropriate types
-  const searchVillagesHandler = (query: string) => {
-    searchVillages(query, 'village');
-  };
-
-  const searchNeighborhoodsHandler = (query: string) => {
-    searchNeighborhoods(query, 'neighborhood');
-  };
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -263,40 +220,11 @@ export default function AuthPage() {
                         control={registerForm.control}
                         name="village"
                         render={({ field }) => (
-                          <FormItem className="relative">
-                            <FormLabel>Dorp/Stad</FormLabel>
+                          <FormItem>
+                            <FormLabel>Dorp</FormLabel>
                             <FormControl>
-                              <Input 
-                                {...field} 
-                                onChange={(e) => {
-                                  field.onChange(e.target.value);
-                                  searchVillagesHandler(e.target.value);
-                                }}
-                                autoComplete="off"
-                              />
+                              <Input {...field} />
                             </FormControl>
-                            {villageResults.length > 0 && (
-                              <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto">
-                                {villageResults.map((village) => (
-                                  <div
-                                    key={village.id}
-                                    className="px-4 py-2 hover:bg-muted cursor-pointer"
-                                    onClick={() => {
-                                      field.onChange(village.name);
-                                      setVillageResults([]);
-                                    }}
-                                  >
-                                    {village.name}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {isVillageLoading && (
-                              <div className="text-sm text-muted-foreground">Dorpen laden...</div>
-                            )}
-                            {villageError && (
-                              <div className="text-sm text-destructive">{villageError}</div>
-                            )}
                             <FormMessage />
                           </FormItem>
                         )}
@@ -306,40 +234,11 @@ export default function AuthPage() {
                         control={registerForm.control}
                         name="neighborhood"
                         render={({ field }) => (
-                          <FormItem className="relative">
+                          <FormItem>
                             <FormLabel>Wijk</FormLabel>
                             <FormControl>
-                              <Input 
-                                {...field} 
-                                onChange={(e) => {
-                                  field.onChange(e.target.value);
-                                  searchNeighborhoodsHandler(e.target.value);
-                                }}
-                                autoComplete="off"
-                              />
+                              <Input {...field} />
                             </FormControl>
-                            {neighborhoodResults.length > 0 && (
-                              <div className="absolute z-10 w-full mt-1 bg-background border border-border rounded-md shadow-lg max-h-60 overflow-auto">
-                                {neighborhoodResults.map((neighborhood) => (
-                                  <div
-                                    key={neighborhood.id}
-                                    className="px-4 py-2 hover:bg-muted cursor-pointer"
-                                    onClick={() => {
-                                      field.onChange(neighborhood.name);
-                                      setNeighborhoodResults([]);
-                                    }}
-                                  >
-                                    {neighborhood.name}
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-                            {isNeighborhoodLoading && (
-                              <div className="text-sm text-muted-foreground">Wijken laden...</div>
-                            )}
-                            {neighborhoodError && (
-                              <div className="text-sm text-destructive">{neighborhoodError}</div>
-                            )}
                             <FormMessage />
                           </FormItem>
                         )}
