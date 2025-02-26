@@ -6,7 +6,8 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import createMemoryStore from "memorystore";
+import { Pool } from "@neondatabase/serverless";
+import connectPg from "connect-pg-simple";
 
 declare global {
   namespace Express {
@@ -30,14 +31,20 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  const MemoryStore = createMemoryStore(session);
+  const PostgresStore = connectPg(session);
+  const sessionStore = new PostgresStore({
+    conObject: {
+      connectionString: process.env.DATABASE_URL,
+      ssl: true,
+    },
+    createTableIfMissing: true,
+  });
+
   const sessionSettings: session.SessionOptions = {
     secret: "your-secret-key",
     resave: false,
     saveUninitialized: false,
-    store: new MemoryStore({
-      checkPeriod: 86400000 // prune expired entries every 24h
-    }),
+    store: sessionStore,
     cookie: {
       secure: process.env.NODE_ENV === "production",
       maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days

@@ -62,13 +62,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/activities/:id/register", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Niet geautoriseerd" });
-    }
-
     const activityId = parseInt(req.params.id);
     const result = insertRegistrationSchema.safeParse({
-      userId: req.user.id,
+      userId: req.body.userId,
       activityId
     });
 
@@ -91,40 +87,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.delete("/api/activities/:id/register", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ message: "Niet geautoriseerd" });
-    }
-
     const activityId = parseInt(req.params.id);
-    await storage.deleteRegistration(req.user.id, activityId);
+    const userId = req.body.userId;
+
+    await storage.deleteRegistration(userId, activityId);
     res.status(204).send();
   });
 
-  // User's activities
+  // New route to get user's activities
   app.get("/api/users/:id/activities", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
       return res.status(401).json({ message: "Niet geautoriseerd" });
     }
 
-    if (req.user.id !== parseInt(req.params.id)) {
-      return res.status(403).json({ message: "Geen toegang" });
-    }
-
-    const registrations = await storage.getRegistrationsByUser(req.user.id);
+    const registrations = await storage.getRegistrationsByUser(parseInt(req.params.id));
     const activities = await Promise.all(
       registrations.map(r => storage.getActivity(r.activityId))
     );
     res.json(activities.filter(a => a !== undefined));
   });
 
-  // Update user settings
+  // New route to update user settings
   app.patch("/api/users/:id", async (req, res) => {
-    if (!req.isAuthenticated()) {
+    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
       return res.status(401).json({ message: "Niet geautoriseerd" });
-    }
-
-    if (req.user.id !== parseInt(req.params.id)) {
-      return res.status(403).json({ message: "Geen toegang" });
     }
 
     const schema = z.object({
@@ -136,7 +122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Ongeldige gegevens" });
     }
 
-    const user = await storage.updateUser(req.user.id, result.data);
+    const user = await storage.updateUser(parseInt(req.params.id), result.data);
     res.json(user);
   });
 
