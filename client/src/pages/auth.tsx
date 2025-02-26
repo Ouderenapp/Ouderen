@@ -48,7 +48,7 @@ export default function AuthPage() {
   
   // Dorp/stad zoeken
   const { 
-    searchResults: villageSearchResults, 
+    searchResults: villageResults, 
     isLoading: isVillageLoading, 
     error: villageError,
     searchLocations: searchVillages 
@@ -66,8 +66,8 @@ export default function AuthPage() {
   
   // Update suggestions when results change
   useEffect(() => {
-    setVillageResults(villageSearchResults || []);
-  }, [villageSearchResults]);
+    setVillageResults(villageResults);
+  }, [villageResults]);
   
   useEffect(() => {
     setNeighborhoodResults(neighborhoodResults);
