@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { useDebounce } from "./use-debounce";
+import { useState } from 'react';
+import { useDebounce } from './use-debounce';
 
 interface LocationResult {
   id: string;
@@ -22,7 +22,7 @@ export function useLocation() {
 
     setIsLoading(true);
     setError(null);
-
+    
     try {
       // OpenStreetMap Nominatim API
       const countryCode = "nl"; // Nederland als standaard
