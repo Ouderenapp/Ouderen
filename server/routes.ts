@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertRegistrationSchema } from "@shared/schema";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
@@ -91,6 +92,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     await storage.deleteRegistration(userId, activityId);
     res.status(204).send();
+  });
+
+  // New route to get user's activities
+  app.get("/api/users/:id/activities", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
+      return res.status(401).json({ message: "Niet geautoriseerd" });
+    }
+
+    const registrations = await storage.getRegistrationsByUser(parseInt(req.params.id));
+    const activities = await Promise.all(
+      registrations.map(r => storage.getActivity(r.activityId))
+    );
+    res.json(activities.filter(a => a !== undefined));
+  });
+
+  // New route to update user settings
+  app.patch("/api/users/:id", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
+      return res.status(401).json({ message: "Niet geautoriseerd" });
+    }
+
+    const schema = z.object({
+      anonymousParticipation: z.boolean(),
+    });
+
+    const result = schema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ message: "Ongeldige gegevens" });
+    }
+
+    const user = await storage.updateUser(parseInt(req.params.id), result.data);
+    res.json(user);
   });
 
   return httpServer;

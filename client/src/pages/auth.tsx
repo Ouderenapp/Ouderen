@@ -19,8 +19,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription,
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Checkbox } from "@/components/ui/checkbox";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Gebruikersnaam is verplicht"),
@@ -30,6 +32,9 @@ const loginSchema = z.object({
 const registerSchema = loginSchema.extend({
   displayName: z.string().min(1, "Naam is verplicht"),
   phone: z.string().min(1, "Telefoonnummer is verplicht"),
+  village: z.string().min(1, "Dorp is verplicht"),
+  neighborhood: z.string().min(1, "Wijk is verplicht"),
+  anonymousParticipation: z.boolean().default(false),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -55,6 +60,9 @@ export default function AuthPage() {
       password: "",
       displayName: "",
       phone: "",
+      village: "",
+      neighborhood: "",
+      anonymousParticipation: false,
     },
   });
 
@@ -204,6 +212,55 @@ export default function AuthPage() {
                               <Input {...field} />
                             </FormControl>
                             <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="village"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Dorp</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="neighborhood"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Wijk</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="anonymousParticipation"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                            <FormControl>
+                              <Checkbox
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <div className="space-y-1 leading-none">
+                              <FormLabel>Anoniem deelnemen</FormLabel>
+                              <FormDescription>
+                                Alleen uw dorp en wijk worden getoond bij activiteiten
+                              </FormDescription>
+                            </div>
                           </FormItem>
                         )}
                       />

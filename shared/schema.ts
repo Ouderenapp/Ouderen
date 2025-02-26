@@ -8,6 +8,9 @@ export const users = pgTable("users", {
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
   phone: text("phone").notNull(),
+  village: text("village").notNull(),
+  neighborhood: text("neighborhood").notNull(),
+  anonymousParticipation: boolean("anonymous_participation").notNull().default(false),
 });
 
 export const centers = pgTable("centers", {
@@ -39,6 +42,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   displayName: true,
   phone: true,
+  village: true,
+  neighborhood: true,
+  anonymousParticipation: true,
 });
 
 export const insertCenterSchema = createInsertSchema(centers);
