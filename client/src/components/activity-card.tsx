@@ -43,7 +43,7 @@ export function ActivityCard({ activity, onRegister, isRegistered }: ActivityCar
             variant={isRegistered ? "secondary" : "default"}
             onClick={onRegister}
           >
-            {isRegistered ? "Cancel Registration" : "Register"}
+            {isRegistered ? "Annuleren" : "Aanmelden"}
           </Button>
         )}
       </CardFooter>

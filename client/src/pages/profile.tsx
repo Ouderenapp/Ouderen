@@ -43,6 +43,36 @@ export default function Profile() {
       });
     },
   });
+
+  const unregister = useMutation({
+    mutationFn: async (activityId: number) => {
+      if (!user) return;
+      await apiRequest("DELETE", `/api/activities/${activityId}/register`, {
+        userId: user.id,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}/activities`] });
+      toast({
+        title: "Afmelding geslaagd",
+        description: "U bent afgemeld voor deze activiteit.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Afmelding mislukt",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleUnregister = (activityId: number) => {
+    const confirmUnregister = window.confirm("Weet u zeker dat u zich wilt afmelden voor deze activiteit?");
+    if (confirmUnregister) {
+      unregister.mutate(activityId);
+    }
+  };
   
   const updateProfile = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -224,7 +254,7 @@ export default function Profile() {
               key={activity.id}
               activity={activity}
               isRegistered={true}
-              onRegister={() => {}}
+              onRegister={() => handleUnregister(activity.id)}
             />
           ))}
           {(!myActivities || myActivities.length === 0) && (
