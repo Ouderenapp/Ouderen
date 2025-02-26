@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/hooks/use-theme";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/home";
 import Center from "@/pages/center";
@@ -28,13 +29,15 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <div className="min-h-screen bg-background">
-          <Navigation />
-          <main className="container mx-auto px-4 py-8">
-            <Router />
-          </main>
-        </div>
-        <Toaster />
+        <ThemeProvider>
+          <div className="min-h-screen bg-background">
+            <Navigation />
+            <main className="container mx-auto px-4 py-8">
+              <Router />
+            </main>
+          </div>
+          <Toaster />
+        </ThemeProvider>
       </AuthProvider>
     </QueryClientProvider>
   );

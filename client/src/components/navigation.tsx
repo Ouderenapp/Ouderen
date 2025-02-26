@@ -1,12 +1,20 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Building2, User } from "lucide-react";
+import { Building2, User, Eye } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useTheme } from "@/hooks/use-theme";
 import { Button } from "./ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function Navigation() {
   const [location] = useLocation();
   const { user, logout } = useAuth();
+  const { theme, toggleAccessibilityMode } = useTheme();
 
   const links = [
     { href: "/", label: "Activiteitencentra", icon: Building2 },
@@ -25,6 +33,7 @@ export default function Navigation() {
                     "flex items-center space-x-2 text-lg font-medium transition-colors hover:text-primary",
                     location === href ? "text-primary" : "text-muted-foreground"
                   )}
+                  data-accessibility-mode={theme.isAccessibilityMode}
                 >
                   <Icon className="h-5 w-5" />
                   <span>{label}</span>
@@ -33,17 +42,45 @@ export default function Navigation() {
             ))}
           </div>
 
-          <div>
+          <div className="flex items-center space-x-4">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleAccessibilityMode}
+                    aria-label={theme.isAccessibilityMode ? "Toegankelijkheidsmodus uitschakelen" : "Toegankelijkheidsmodus inschakelen"}
+                  >
+                    <Eye className={cn(
+                      "h-5 w-5",
+                      theme.isAccessibilityMode && "text-primary"
+                    )} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {theme.isAccessibilityMode
+                      ? "Toegankelijkheidsmodus uitschakelen"
+                      : "Toegankelijkheidsmodus inschakelen"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
             {user ? (
               <Button
                 variant="outline"
                 onClick={() => logout()}
+                data-accessibility-mode={theme.isAccessibilityMode}
               >
                 Uitloggen
               </Button>
             ) : (
               <Link href="/auth">
-                <Button>Inloggen</Button>
+                <Button data-accessibility-mode={theme.isAccessibilityMode}>
+                  Inloggen
+                </Button>
               </Link>
             )}
           </div>

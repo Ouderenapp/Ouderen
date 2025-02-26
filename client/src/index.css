@@ -3,11 +3,54 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --font-size-multiplier: 1;
+    --contrast-multiplier: 1;
+  }
+
   * {
     @apply border-border;
   }
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
+  }
+
+  /* Accessibility styles */
+  .text-base {
+    font-size: calc(1rem * var(--font-size-multiplier));
+  }
+
+  .text-lg {
+    font-size: calc(1.125rem * var(--font-size-multiplier));
+  }
+
+  .text-xl {
+    font-size: calc(1.25rem * var(--font-size-multiplier));
+  }
+
+  .text-2xl {
+    font-size: calc(1.5rem * var(--font-size-multiplier));
+  }
+
+  .text-3xl {
+    font-size: calc(1.875rem * var(--font-size-multiplier));
+  }
+
+  .text-4xl {
+    font-size: calc(2.25rem * var(--font-size-multiplier));
+  }
+
+  [data-accessibility-mode="true"] {
+    @apply focus:outline-4 focus:outline-primary;
+  }
+
+  [data-accessibility-mode="true"] .text-muted-foreground {
+    opacity: calc(0.8 * var(--contrast-multiplier));
+  }
+
+  [data-accessibility-mode="true"] button,
+  [data-accessibility-mode="true"] a {
+    @apply focus:ring-4 focus:ring-primary focus:outline-none;
   }
 }
