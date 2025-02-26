@@ -7,11 +7,21 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Activity } from "@shared/schema";
-import { Building2, MapPin } from "lucide-react";
+import { Building2, MapPin, Edit, Save, X } from "lucide-react";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function Profile() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    displayName: "",
+    phone: "",
+    village: "",
+    neighborhood: ""
+  });
 
   const { data: myActivities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: [`/api/users/${user?.id}/activities`],
@@ -33,6 +43,42 @@ export default function Profile() {
       });
     },
   });
+  
+  const updateProfile = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      if (!user) return;
+      await apiRequest("PATCH", `/api/users/${user.id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/user"] });
+      setIsEditing(false);
+      toast({
+        title: "Profiel bijgewerkt",
+        description: "Uw profielgegevens zijn opgeslagen.",
+      });
+    },
+  });
+  
+  const handleEditClick = () => {
+    if (user) {
+      setFormData({
+        displayName: user.displayName,
+        phone: user.phone,
+        village: user.village,
+        neighborhood: user.neighborhood
+      });
+      setIsEditing(true);
+    }
+  };
+  
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProfile.mutate(formData);
+  };
 
   if (!user) return null;
 
@@ -61,28 +107,90 @@ export default function Profile() {
   return (
     <div className="space-y-8">
       <Card>
-        <CardHeader className="text-2xl font-bold">Mijn Profiel</CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between text-2xl font-bold">
+          <span>Mijn Profiel</span>
+          {!isEditing ? (
+            <Button variant="outline" size="icon" onClick={handleEditClick}>
+              <Edit className="h-4 w-4" />
+            </Button>
+          ) : null}
+        </CardHeader>
         <CardContent>
           <div className="space-y-6">
-            <div className="space-y-4">
-              <div>
-                <label className="text-lg font-medium">Naam</label>
-                <p className="text-xl">{user.displayName}</p>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <MapPin className="h-5 w-5" />
+            {!isEditing ? (
+              <div className="space-y-4">
                 <div>
-                  <label className="text-lg font-medium">Locatie</label>
-                  <p className="text-xl">{user.village}, {user.neighborhood}</p>
+                  <label className="text-lg font-medium">Naam</label>
+                  <p className="text-xl">{user.displayName}</p>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <MapPin className="h-5 w-5" />
+                  <div>
+                    <label className="text-lg font-medium">Locatie</label>
+                    <p className="text-xl">{user.village}, {user.neighborhood}</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-lg font-medium">Telefoonnummer</label>
+                  <p className="text-xl">{user.phone}</p>
                 </div>
               </div>
-
-              <div>
-                <label className="text-lg font-medium">Telefoonnummer</label>
-                <p className="text-xl">{user.phone}</p>
-              </div>
-            </div>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="displayName">Naam</Label>
+                  <Input 
+                    id="displayName" 
+                    value={formData.displayName}
+                    onChange={(e) => setFormData({...formData, displayName: e.target.value})}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefoonnummer</Label>
+                  <Input 
+                    id="phone" 
+                    value={formData.phone}
+                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="village">Gemeente</Label>
+                  <Input 
+                    id="village" 
+                    value={formData.village}
+                    onChange={(e) => setFormData({...formData, village: e.target.value})}
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="neighborhood">Wijk</Label>
+                  <Input 
+                    id="neighborhood" 
+                    value={formData.neighborhood}
+                    onChange={(e) => setFormData({...formData, neighborhood: e.target.value})}
+                    required
+                  />
+                </div>
+                
+                <div className="flex space-x-2 pt-2">
+                  <Button type="submit" disabled={updateProfile.isPending}>
+                    {updateProfile.isPending ? "Bezig..." : "Opslaan"}
+                    {!updateProfile.isPending && <Save className="ml-2 h-4 w-4" />}
+                  </Button>
+                  <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                    Annuleren
+                    <X className="ml-2 h-4 w-4" />
+                  </Button>
+                </div>
+              </form>
+            )}
 
             <div className="flex items-center space-x-2">
               <Checkbox

@@ -108,22 +108,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // New route to update user settings
-  app.patch("/api/users/:id", async (req, res) => {
-    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
-      return res.status(401).json({ message: "Niet geautoriseerd" });
+  app.patch("/api/users/:id", async (req, res, next) => {
+    try {
+      if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
+        return res.sendStatus(403);
+      }
+
+      // Haal alle velden op die we willen bijwerken
+      const { 
+        anonymousParticipation, 
+        displayName, 
+        phone, 
+        village, 
+        neighborhood 
+      } = req.body;
+
+      // Maak een object met alleen de ingevulde velden
+      const updateData: any = {};
+
+      if (anonymousParticipation !== undefined) {
+        updateData.anonymousParticipation = anonymousParticipation;
+      }
+
+      if (displayName) {
+        updateData.displayName = displayName;
+      }
+
+      if (phone) {
+        updateData.phone = phone;
+      }
+
+      if (village) {
+        updateData.village = village;
+      }
+
+      if (neighborhood) {
+        updateData.neighborhood = neighborhood;
+      }
+
+      const user = await storage.updateUser(parseInt(req.params.id), updateData);
+
+      res.json(user);
+    } catch (err) {
+      next(err);
     }
-
-    const schema = z.object({
-      anonymousParticipation: z.boolean(),
-    });
-
-    const result = schema.safeParse(req.body);
-    if (!result.success) {
-      return res.status(400).json({ message: "Ongeldige gegevens" });
-    }
-
-    const user = await storage.updateUser(parseInt(req.params.id), result.data);
-    res.json(user);
   });
 
   return httpServer;
