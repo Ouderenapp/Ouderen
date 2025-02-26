@@ -192,20 +192,25 @@ export default function Profile() {
               </form>
             )}
 
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="anonymous"
-                checked={user.anonymousParticipation}
-                onCheckedChange={(checked) => {
-                  updateAnonymous.mutate(checked as boolean);
-                }}
-              />
-              <label
-                htmlFor="anonymous"
-                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-              >
-                Anoniem deelnemen aan activiteiten
-              </label>
+            <div className="flex items-center space-x-3">
+              <div className="relative flex items-start">
+                <div className="flex h-6 items-center">
+                  <Checkbox
+                    id="anonymous"
+                    checked={user.anonymousParticipation}
+                    onCheckedChange={(checked) => {
+                      updateAnonymous.mutate(checked as boolean);
+                    }}
+                    className="h-5 w-5"
+                  />
+                </div>
+                <label
+                  htmlFor="anonymous"
+                  className="ml-3 cursor-pointer text-sm font-medium leading-6 hover:text-primary"
+                >
+                  Anoniem deelnemen aan activiteiten
+                </label>
+              </div>
             </div>
           </div>
         </CardContent>
