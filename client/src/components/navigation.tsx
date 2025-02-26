@@ -1,60 +1,89 @@
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
-import { MoonIcon, SunIcon } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { cn } from "@/lib/utils";
+import { Building2, User, Eye } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
+import { Button } from "./ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
-export function Navigation() {
+export default function Navigation() {
+  const [location] = useLocation();
   const { user, logout } = useAuth();
-  const { theme, setTheme } = useTheme();
+  const { theme, toggleAccessibilityMode } = useTheme();
 
-  const handleLogout = () => {
-    logout();
-  };
+  const links = [
+    { href: "/", label: "Activiteitencentra", icon: Building2 },
+    ...(user ? [{ href: "/profile", label: "Mijn Profiel", icon: User }] : []),
+  ];
 
   return (
-    <nav className="border-b">
-      <div className="container mx-auto flex items-center justify-between p-4">
-        <div className="flex items-center gap-4 font-medium">
-          <Link href="/">
-            <a className="text-lg font-bold">Samenwerken</a>
-          </Link>
+    <nav className="border-b bg-white">
+      <div className="container mx-auto px-4">
+        <div className="flex h-16 items-center justify-between">
+          <div className="flex items-center space-x-8">
+            {links.map(({ href, label, icon: Icon }) => (
+              <Link key={href} href={href}>
+                <a
+                  className={cn(
+                    "flex items-center space-x-2 text-lg font-medium transition-colors hover:text-primary",
+                    location === href ? "text-primary" : "text-muted-foreground"
+                  )}
+                  data-accessibility-mode={theme.isAccessibilityMode}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{label}</span>
+                </a>
+              </Link>
+            ))}
+          </div>
 
-          <Link href="/">
-            <a>Centra</a>
-          </Link>
+          <div className="flex items-center space-x-4">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={toggleAccessibilityMode}
+                    aria-label={theme.isAccessibilityMode ? "Toegankelijkheidsmodus uitschakelen" : "Toegankelijkheidsmodus inschakelen"}
+                  >
+                    <Eye className={cn(
+                      "h-5 w-5",
+                      theme.isAccessibilityMode && "text-primary"
+                    )} />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>
+                    {theme.isAccessibilityMode
+                      ? "Toegankelijkheidsmodus uitschakelen"
+                      : "Toegankelijkheidsmodus inschakelen"}
+                  </p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
 
-          {user && (
-            <Link href="/profile">
-              <a>Mijn profiel</a>
-            </Link>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          >
-            {theme === "dark" ? (
-              <SunIcon className="h-5 w-5" />
+            {user ? (
+              <Button
+                variant="outline"
+                onClick={() => logout()}
+                data-accessibility-mode={theme.isAccessibilityMode}
+              >
+                Uitloggen
+              </Button>
             ) : (
-              <MoonIcon className="h-5 w-5" />
+              <Link href="/auth">
+                <Button data-accessibility-mode={theme.isAccessibilityMode}>
+                  Inloggen
+                </Button>
+              </Link>
             )}
-          </Button>
-
-          {user ? (
-            <Button variant="default" onClick={handleLogout}>
-              Uitloggen
-            </Button>
-          ) : (
-            <Link href="/login">
-              <a>
-                <Button variant="default">Inloggen</Button>
-              </a>
-            </Link>
-          )}
+          </div>
         </div>
       </div>
     </nav>
