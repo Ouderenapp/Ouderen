@@ -69,7 +69,7 @@ export default function CenterAdminPage() {
     },
   });
 
-  // Form voor het aanmaken van nieuwe activiteiten
+  // The form for creating new activities
   const activityForm = useForm({
     resolver: zodResolver(insertActivitySchema),
     defaultValues: {
@@ -79,13 +79,20 @@ export default function CenterAdminPage() {
       date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
       capacity: 10,
       centerId: center?.id,
+      materialsNeeded: "",
+      facilitiesAvailable: ""
     },
   });
 
-  // Aanmaken van nieuwe activiteit
+  // Creating a new activity
   const createActivityMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/activities", data);
+      // Ensure centerId is included in the request
+      const activityData = {
+        ...data,
+        centerId: center?.id
+      };
+      const response = await apiRequest("POST", "/api/activities", activityData);
       return response.json();
     },
     onSuccess: () => {
@@ -97,6 +104,7 @@ export default function CenterAdminPage() {
       });
     },
     onError: (error: Error) => {
+      console.error("Error creating activity:", error);
       toast({
         title: "Fout bij aanmaken activiteit",
         description: error.message,
@@ -352,7 +360,32 @@ export default function CenterAdminPage() {
                 </FormItem>
               )}
             />
-
+            <FormField
+              control={activityForm.control}
+              name="materialsNeeded"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Benodigde materialen</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={activityForm.control}
+              name="facilitiesAvailable"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Beschikbare faciliteiten</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <Button
               type="submit"
               disabled={createActivityMutation.isPending}
