@@ -5,15 +5,20 @@ import type { Center, Activity } from "@shared/schema";
 
 export default function CenterPage() {
   const { id } = useParams();
-  const centerId = parseInt(id);
+  const centerId = parseInt(id || "0");
 
   const { data: center, isLoading: isLoadingCenter } = useQuery<Center>({
     queryKey: [`/api/centers/${centerId}`],
   });
 
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
-    queryKey: [`/api/activities`, { centerId }],
-    enabled: !!centerId, // Only fetch when we have a centerId
+    queryKey: [`/api/activities`],
+    queryFn: async () => {
+      const response = await fetch(`/api/activities?centerId=${centerId}`);
+      if (!response.ok) throw new Error('Failed to fetch activities');
+      return response.json();
+    },
+    enabled: !!centerId,
   });
 
   if (isLoadingCenter || isLoadingActivities) {

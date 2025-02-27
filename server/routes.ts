@@ -111,26 +111,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/activities", async (req, res) => {
     try {
       const centerId = req.query.centerId ? parseInt(req.query.centerId as string) : undefined;
-      if (req.query.centerId && isNaN(parseInt(req.query.centerId as string))) {
-          return res.status(400).json({message: "Invalid center ID"});
-      }
 
       // Als het een buurthuis admin is, alleen activiteiten van eigen buurthuis tonen
       if (req.user?.role === 'center_admin') {
-        const center = await storage.getCentersByAdmin(req.user.id);
-        if (center.length > 0) {
-          const activities = await storage.getActivities(center[0].id);
+        const centers = await storage.getCentersByAdmin(req.user.id);
+        if (centers.length > 0) {
+          const activities = await storage.getActivities(centers[0].id);
           return res.json(activities);
         }
         return res.json([]);
       }
 
-      // Voor normale gebruikers, alleen activiteiten van opgegeven buurthuis tonen
-      if (!centerId) {
-        return res.status(400).json({ message: "Buurthuis ID is verplicht" });
+      // Voor normale gebruikers
+      if (centerId) {
+        const activities = await storage.getActivities(centerId);
+        return res.json(activities);
       }
-      const activities = await storage.getActivities(centerId);
-      res.json(activities);
+
+      // Als er geen centerId is opgegeven, stuur een lege lijst terug
+      return res.json([]);
+
     } catch (error) {
       console.error('Error getting activities:', error);
       res.status(500).json({ message: "Er is een fout opgetreden" });
