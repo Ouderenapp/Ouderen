@@ -1,10 +1,9 @@
 import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { Command } from "cmdk";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
-  Command as CommandPrimitive,
+  Command,
   CommandEmpty,
   CommandGroup,
   CommandInput,
@@ -34,22 +33,13 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
   const [selectedNeighborhood, setSelectedNeighborhood] = useState(defaultNeighborhood || "");
 
   // Zoek dorpen via Overpass API
-  const { data: villages = [], isLoading: isLoadingVillages } = useQuery({
-    queryKey: ["villages", searchTerm],
+  const { data: villages = [], isLoading } = useQuery({
+    queryKey: [`/api/activities`, searchTerm],
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) return [];
 
       try {
-        const query = `
-          [out:json][timeout:60];
-          area["ISO3166-1"="NL"]->.nl;
-          (
-            node["place"="city"]["name"~"${searchTerm}", i](area.nl);
-            node["place"="town"]["name"~"${searchTerm}", i](area.nl);
-            node["place"="village"]["name"~"${searchTerm}", i](area.nl);
-          );
-          out body;
-        `;
+        const query = `[out:json][timeout:60];area["ISO3166-1"="NL"]->.nl;(node["place"="city"]["name"~"${searchTerm}", i](area.nl);node["place"="town"]["name"~"${searchTerm}", i](area.nl);node["place"="village"]["name"~"${searchTerm}", i](area.nl););out body;`;
 
         console.log('Searching for villages with query:', searchTerm);
         const response = await fetch("https://overpass-api.de/api/interpreter", {
@@ -60,80 +50,17 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
           }
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
         const data = await response.json();
-        console.log('Found villages:', data);
-
-        if (!data.elements) {
-          console.error('No elements in response:', data);
-          return [];
-        }
-
         return data.elements
           .filter((item: any) => item.tags && item.tags.name)
           .map((item: any) => item.tags.name)
-          .filter((name: string, index: number, self: string[]) => self.indexOf(name) === index)
           .sort();
       } catch (error) {
-        console.error('Error fetching villages:', error);
+        console.error('Error:', error);
         return [];
       }
     },
     enabled: searchTerm.length >= 2
-  });
-
-  // Zoek wijken voor geselecteerd dorp
-  const { data: neighborhoods = [], isLoading: isLoadingNeighborhoods } = useQuery({
-    queryKey: ["neighborhoods", selectedVillage],
-    queryFn: async () => {
-      if (!selectedVillage) return [];
-
-      try {
-        const query = `
-          [out:json][timeout:60];
-          area["ISO3166-1"="NL"]->.nl;
-          area["name"="${selectedVillage}"](area.nl)->.searchArea;
-          (
-            node["place"="suburb"](area.searchArea);
-          );
-          out body;
-        `;
-
-        console.log('Searching for neighborhoods in:', selectedVillage);
-        const response = await fetch("https://overpass-api.de/api/interpreter", {
-          method: "POST",
-          body: query,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        console.log('Found neighborhoods:', data);
-
-        if (!data.elements) {
-          console.error('No elements in response:', data);
-          return [];
-        }
-
-        return data.elements
-          .filter((item: any) => item.tags && item.tags.name)
-          .map((item: any) => item.tags.name)
-          .filter((name: string, index: number, self: string[]) => self.indexOf(name) === index)
-          .sort();
-      } catch (error) {
-        console.error('Error fetching neighborhoods:', error);
-        return [];
-      }
-    },
-    enabled: !!selectedVillage
   });
 
   return (
@@ -151,7 +78,7 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0">
-          <CommandPrimitive>
+          <Command>
             <CommandInput 
               placeholder="Type om te zoeken..." 
               value={searchTerm}
@@ -160,7 +87,7 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
             <CommandEmpty>
               {searchTerm.length < 2 
                 ? "Type minimaal 2 letters..."
-                : isLoadingVillages 
+                : isLoading 
                   ? "Zoeken..." 
                   : "Geen plaatsen gevonden"}
             </CommandEmpty>
@@ -170,11 +97,11 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
                   key={village}
                   onSelect={() => {
                     setSelectedVillage(village);
-                    setSelectedNeighborhood("");
+                    setSelectedNeighborhood("Centrum");
                     setOpen(false);
                     onLocationSelect({
                       village,
-                      neighborhood: "",
+                      neighborhood: "Centrum"
                     });
                   }}
                 >
@@ -187,59 +114,9 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
                 </CommandItem>
               ))}
             </CommandGroup>
-          </CommandPrimitive>
+          </Command>
         </PopoverContent>
       </Popover>
-
-      {selectedVillage && (
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              className="justify-between"
-            >
-              {selectedNeighborhood || "Selecteer een wijk"}
-              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[300px] p-0">
-            <CommandPrimitive>
-              <CommandInput placeholder="Zoek een wijk..." />
-              <CommandEmpty>
-                {isLoadingNeighborhoods 
-                  ? "Wijken ophalen..." 
-                  : neighborhoods.length === 0
-                    ? `Geen wijken gevonden in ${selectedVillage}`
-                    : "Begin met typen om te zoeken..."}
-              </CommandEmpty>
-              <CommandGroup>
-                {neighborhoods.map((neighborhood) => (
-                  <CommandItem
-                    key={neighborhood}
-                    onSelect={() => {
-                      setSelectedNeighborhood(neighborhood);
-                      onLocationSelect({
-                        village: selectedVillage,
-                        neighborhood,
-                      });
-                    }}
-                  >
-                    <Check
-                      className={`mr-2 h-4 w-4 ${
-                        selectedNeighborhood === neighborhood
-                          ? "opacity-100"
-                          : "opacity-0"
-                      }`}
-                    />
-                    {neighborhood}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandPrimitive>
-          </PopoverContent>
-        </Popover>
-      )}
     </div>
   );
 }
