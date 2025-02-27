@@ -36,7 +36,7 @@ export default function Navigation() {
         <div className="lg:hidden flex flex-col py-4">
           <div className="flex items-center justify-between mb-4">
             <Link href="/">
-              <a className="text-xl font-bold">Buurtactiviteiten</a>
+              <span className="text-xl font-bold cursor-pointer">Buurtactiviteiten</span>
             </Link>
             <div className="flex items-center space-x-2">
               <TooltipProvider>
@@ -88,9 +88,9 @@ export default function Navigation() {
           <div className="grid grid-cols-2 gap-2">
             {links.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href}>
-                <a
+                <div
                   className={cn(
-                    "flex items-center space-x-2 p-3 rounded-lg transition-colors",
+                    "flex items-center space-x-2 p-3 rounded-lg transition-colors cursor-pointer",
                     location === href
                       ? "bg-primary text-primary-foreground"
                       : "hover:bg-muted"
@@ -99,7 +99,7 @@ export default function Navigation() {
                 >
                   <Icon className="h-5 w-5" />
                   <span>{label}</span>
-                </a>
+                </div>
               </Link>
             ))}
           </div>
@@ -110,16 +110,16 @@ export default function Navigation() {
           <div className="flex items-center space-x-8">
             {links.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href}>
-                <a
+                <div
                   className={cn(
-                    "flex items-center space-x-2 text-lg font-medium transition-colors hover:text-primary",
+                    "flex items-center space-x-2 text-lg font-medium transition-colors hover:text-primary cursor-pointer",
                     location === href ? "text-primary" : "text-muted-foreground"
                   )}
                   data-accessibility-mode={theme.isAccessibilityMode}
                 >
                   <Icon className="h-5 w-5" />
                   <span>{label}</span>
-                </a>
+                </div>
               </Link>
             ))}
           </div>
