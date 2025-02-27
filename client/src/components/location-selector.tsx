@@ -38,17 +38,42 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
     queryKey: ["villages", searchTerm],
     queryFn: async () => {
       if (!searchTerm) return [];
+
+      // Aangepaste query parameters voor Nederlandse dorpen
+      const params = new URLSearchParams({
+        format: 'json',
+        country: 'Netherlands',
+        q: searchTerm,
+        addressdetails: '1',
+        limit: '10',
+        featuretype: 'city'
+      });
+
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&country=Netherlands&city=${encodeURIComponent(
-          searchTerm
-        )}&limit=5`
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`
       );
+
+      if (!response.ok) {
+        throw new Error('Fout bij het ophalen van dorpen');
+      }
+
       const data = await response.json();
-      return data.map((item: any) => ({
-        name: item.display_name.split(",")[0],
-        lat: item.lat,
-        lon: item.lon,
-      }));
+
+      // Filter en format de resultaten
+      return data
+        .filter((item: any) => 
+          item.address && 
+          (item.address.city || item.address.town || item.address.village)
+        )
+        .map((item: any) => ({
+          name: item.address.city || item.address.town || item.address.village,
+          lat: item.lat,
+          lon: item.lon,
+        }))
+        .filter((item: any, index: number, self: any[]) => 
+          // Verwijder duplicaten
+          index === self.findIndex((t) => t.name === item.name)
+        );
     },
     enabled: searchTerm.length > 2,
   });
@@ -58,13 +83,35 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
     queryKey: ["neighborhoods", selectedVillage],
     queryFn: async () => {
       if (!selectedVillage) return [];
+
+      const params = new URLSearchParams({
+        format: 'json',
+        country: 'Netherlands',
+        city: selectedVillage,
+        addressdetails: '1',
+        limit: '15',
+        featuretype: 'suburb'
+      });
+
       const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&country=Netherlands&city=${encodeURIComponent(
-          selectedVillage
-        )}&type=suburb&limit=10`
+        `https://nominatim.openstreetmap.org/search?${params.toString()}`
       );
+
+      if (!response.ok) {
+        throw new Error('Fout bij het ophalen van wijken');
+      }
+
       const data = await response.json();
-      return data.map((item: any) => item.display_name.split(",")[0]);
+
+      return data
+        .filter((item: any) => 
+          item.address && item.address.suburb
+        )
+        .map((item: any) => item.address.suburb)
+        .filter((name: string, index: number, self: string[]) => 
+          // Verwijder duplicaten
+          self.indexOf(name) === index
+        );
     },
     enabled: !!selectedVillage,
   });
@@ -90,7 +137,11 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
               value={searchTerm}
               onValueChange={setSearchTerm}
             />
-            <CommandEmpty>Geen dorpen gevonden.</CommandEmpty>
+            <CommandEmpty>
+              {searchTerm.length > 0 
+                ? `Geen dorpen gevonden voor "${searchTerm}"`
+                : "Begin met typen om dorpen te zoeken..."}
+            </CommandEmpty>
             <CommandGroup>
               {villages.map((village: any) => (
                 <CommandItem
@@ -133,7 +184,11 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
           <PopoverContent className="w-[300px] p-0">
             <CommandPrimitive>
               <CommandInput placeholder="Zoek een wijk..." />
-              <CommandEmpty>Geen wijken gevonden.</CommandEmpty>
+              <CommandEmpty>
+                {neighborhoods.length === 0 
+                  ? `Geen wijken gevonden in ${selectedVillage}`
+                  : "Begin met typen om wijken te zoeken..."}
+              </CommandEmpty>
               <CommandGroup>
                 {neighborhoods.map((neighborhood) => (
                   <CommandItem
