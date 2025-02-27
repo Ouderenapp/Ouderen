@@ -1,9 +1,10 @@
-import { pgTable, text, serial, integer, boolean, timestamp, pgEnum, numeric } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const roleEnum = pgEnum('role', ['user', 'center_admin']);
 
+// Create schema for updating activities
 export const updateActivitySchema = z.object({
   name: z.string().min(3),
   description: z.string().min(10),
@@ -16,7 +17,6 @@ export const updateActivitySchema = z.object({
   capacity: z.number().int().positive(),
   materialsNeeded: z.string().optional(),
   facilitiesAvailable: z.string().optional(),
-  price: z.number().min(0).optional(),
 });
 
 export const users = pgTable("users", {
@@ -51,16 +51,12 @@ export const activities = pgTable("activities", {
   capacity: integer("capacity").notNull(),
   materialsNeeded: text("materials_needed"),
   facilitiesAvailable: text("facilities_available"),
-  price: numeric("price"),
 });
 
 export const registrations = pgTable("registrations", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   activityId: integer("activity_id").notNull(),
-  paymentStatus: text("payment_status").default('not_required'),
-  paymentIntentId: text("payment_intent_id"),
-  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const waitlist = pgTable("waitlist", {
@@ -95,6 +91,7 @@ export const carpoolPassengers = pgTable("carpool_passengers", {
   passengerId: integer("passenger_id").notNull(),
 });
 
+// Insert schemas
 export const insertReminderSchema = createInsertSchema(reminders);
 export const insertWaitlistSchema = createInsertSchema(waitlist);
 export const insertCarpoolSchema = createInsertSchema(carpools);
@@ -114,13 +111,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertCenterSchema = createInsertSchema(centers);
 export const insertActivitySchema = createInsertSchema(activities).extend({
   date: z.string().transform((str) => new Date(str)),
-  price: z.number().min(0).optional(),
 });
-export const insertRegistrationSchema = createInsertSchema(registrations).pick({
-  userId: true,
-  activityId: true,
-});
+export const insertRegistrationSchema = createInsertSchema(registrations);
 
+// Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertCenter = z.infer<typeof insertCenterSchema>;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;

@@ -5,11 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Activity, User } from "@shared/schema";
-import { Calendar, Users, Package, Building2, Euro } from "lucide-react";
+import { Calendar, Users, Package, Building2 } from "lucide-react";
 import { format } from "date-fns";
-import { loadStripe } from "@stripe/stripe-js";
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY);
 
 type WaitlistUser = User & { position: number };
 
@@ -43,33 +40,6 @@ export default function ActivityPage() {
         setLocation("/auth");
         throw new Error("U moet eerst inloggen");
       }
-
-      if (activity?.price) {
-        const paymentResponse = await apiRequest("POST", `/api/activities/${activityId}/payment`, {
-          userId: user.id,
-        });
-
-        const { clientSecret } = await paymentResponse.json();
-
-        const stripe = await stripePromise;
-        if (!stripe) throw new Error("Stripe kon niet worden geladen");
-
-        const { error: stripeError } = await stripe.confirmPayment({
-          clientSecret,
-          appearance: {
-            theme: 'stripe',
-          },
-          redirect: 'if_required',
-          confirmParams: {
-            return_url: window.location.href,
-          },
-        });
-
-        if (stripeError) {
-          throw new Error(stripeError.message);
-        }
-      }
-
       await apiRequest("POST", `/api/activities/${activityId}/register`, {
         userId: user.id,
       });
@@ -206,6 +176,7 @@ export default function ActivityPage() {
             </div>
           </div>
 
+          {/* Materialen en faciliteiten */}
           {(activity.materialsNeeded || activity.facilitiesAvailable) && (
             <div className="space-y-2">
               {activity.materialsNeeded && (
@@ -265,26 +236,14 @@ export default function ActivityPage() {
                     </Button>
                   )
                 ) : (
-                  <>
-                    {activity?.price !== undefined && activity?.price !== null && (
-                      <div className="flex items-center space-x-2 text-xl">
-                        <Euro className="h-6 w-6" />
-                        <span>€ {Number(activity.price).toFixed(2)}</span>
-                      </div>
-                    )}
-                    <Button
-                      size="lg"
-                      className="w-full text-lg"
-                      onClick={() => register.mutate()}
-                      disabled={register.isPending}
-                    >
-                      {register.isPending
-                        ? "Bezig..."
-                        : activity?.price !== undefined && activity?.price !== null
-                          ? `Aanmelden en betalen (€${Number(activity.price).toFixed(2)})`
-                          : "Aanmelden voor activiteit"}
-                    </Button>
-                  </>
+                  <Button
+                    size="lg"
+                    className="w-full text-lg"
+                    onClick={() => register.mutate()}
+                    disabled={register.isPending}
+                  >
+                    {register.isPending ? "Bezig..." : "Aanmelden voor activiteit"}
+                  </Button>
                 )}
               </>
             ) : (
@@ -324,6 +283,7 @@ export default function ActivityPage() {
             )}
           </div>
 
+          {/* Wachtlijst sectie */}
           {waitlist && waitlist.length > 0 && (
             <div className="space-y-2">
               <h2 className="text-2xl font-bold">Wachtlijst</h2>

@@ -1,4 +1,6 @@
+
 import { db } from "./db";
+import { reminders, users, centers, activities, registrations } from "@shared/schema";
 import { sql } from "drizzle-orm";
 
 async function migrate() {
@@ -45,23 +47,11 @@ async function migrate() {
     `);
 
     await db.execute(sql`
-      ALTER TABLE activities 
-      ADD COLUMN IF NOT EXISTS price DECIMAL(10,2);
-    `);
-
-    await db.execute(sql`
       CREATE TABLE IF NOT EXISTS registrations (
         id SERIAL PRIMARY KEY,
         user_id INTEGER NOT NULL,
         activity_id INTEGER NOT NULL
       );
-    `);
-
-    await db.execute(sql`
-      ALTER TABLE registrations 
-      ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'not_required',
-      ADD COLUMN IF NOT EXISTS payment_intent_id TEXT,
-      ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `);
 
     await db.execute(sql`
@@ -79,7 +69,6 @@ async function migrate() {
     console.log("Migration completed successfully!");
   } catch (error) {
     console.error("Migration failed:", error);
-    throw error;
   } finally {
     // Close the database connection pool
     await db.pool.end();
