@@ -1,5 +1,5 @@
-import { MailService } from "@sendgrid/mail";
-import type { MailDataRequired } from "@sendgrid/mail";
+import { MailService } from '@sendgrid/mail';
+import type { MailDataRequired } from '@sendgrid/mail';
 
 // Initialize the mail service
 const mailService = new MailService();
@@ -18,41 +18,55 @@ export function initializeEmailService(apiKey: string, fromEmail?: string) {
   if (fromEmail) {
     FROM_EMAIL = fromEmail;
   }
-  // Test the configuration
+  // Test the configuration with detailed logging
   console.log("Email service initialized with from address:", FROM_EMAIL);
+  console.log("Testing SendGrid configuration...");
+
+  // Verify API key is set
+  if (!apiKey) {
+    console.error("SendGrid API key is missing!");
+    return;
+  }
 }
 
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
     console.log("Attempting to send email to:", params.to);
+    console.log("From address:", FROM_EMAIL);
+
     const msg: MailDataRequired = {
       to: params.to,
-      from: FROM_EMAIL,
+      from: {
+        email: FROM_EMAIL,
+        name: "Activiteitencentrum"
+      },
       subject: params.subject,
-      content: [
-        {
-          type: params.html ? "text/html" : "text/plain",
-          value: params.html || params.text || "",
-        },
-      ],
+      text: params.text || '',
+      html: params.html || ''
     };
 
-    await mailService.send(msg);
+    console.log("Sending email with configuration:", JSON.stringify(msg, null, 2));
+
+    const response = await mailService.send(msg);
+    console.log("SendGrid API Response:", response);
     console.log("Email sent successfully to:", params.to);
     return true;
   } catch (error: any) {
-    console.error('SendGrid email error:', error);
+    console.error("SendGrid email error details:");
+    console.error("Error message:", error.message);
     if (error.response) {
-      console.error('SendGrid API response:', error.response.body);
+      console.error("SendGrid API error response:", {
+        body: error.response.body,
+        headers: error.response.headers,
+        status: error.response.statusCode
+      });
     }
     return false;
   }
 }
 
-export async function sendWelcomeEmail(
-  email: string,
-  name: string,
-): Promise<boolean> {
+export async function sendWelcomeEmail(email: string, name: string): Promise<boolean> {
+  console.log(`Sending welcome email to ${email} for ${name}`);
   return sendEmail({
     to: email,
     subject: "Welkom bij het Activiteitencentrum",
@@ -62,6 +76,7 @@ export async function sendWelcomeEmail(
       <p>U kunt nu deelnemen aan activiteiten en blijft op de hoogte van alles wat er gebeurt in uw buurt.</p>
       <p>Met vriendelijke groet,<br>Het Activiteitencentrum Team</p>
     `,
+    text: `Welkom ${name}!\n\nBedankt voor het aanmaken van een account bij het Activiteitencentrum.\n\nU kunt nu deelnemen aan activiteiten en blijft op de hoogte van alles wat er gebeurt in uw buurt.\n\nMet vriendelijke groet,\nHet Activiteitencentrum Team`
   });
 }
 
@@ -72,6 +87,7 @@ export async function sendActivityRegistrationEmail(
   activityDate: Date,
   location: string,
 ): Promise<boolean> {
+  console.log(`Sending activity registration email to ${email} for ${activityName}`);
   return sendEmail({
     to: email,
     subject: `Aanmelding bevestigd: ${activityName}`,
@@ -94,5 +110,6 @@ export async function sendActivityRegistrationEmail(
       <p>We kijken ernaar uit u te zien!</p>
       <p>Met vriendelijke groet,<br>Het Activiteitencentrum Team</p>
     `,
+    text: `Aanmelding bevestigd\n\nBeste ${name},\n\nU bent succesvol aangemeld voor de activiteit "${activityName}".\n\nDetails:\n- Datum: ${activityDate.toLocaleDateString("nl-NL")}\n- Locatie: ${location}\n\nWe kijken ernaar uit u te zien!\n\nMet vriendelijke groet,\nHet Activiteitencentrum Team`
   });
 }
