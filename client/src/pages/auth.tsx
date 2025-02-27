@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LocationSelector } from "@/components/location-selector";
 
 const loginSchema = z.object({
   username: z.string().min(1, "Gebruikersnaam is verplicht"),
@@ -32,8 +33,10 @@ const loginSchema = z.object({
 const registerSchema = loginSchema.extend({
   displayName: z.string().min(1, "Naam is verplicht"),
   phone: z.string().min(1, "Telefoonnummer is verplicht"),
-  village: z.string().min(1, "Dorp is verplicht"),
-  neighborhood: z.string().min(1, "Wijk is verplicht"),
+  location: z.object({
+    village: z.string().min(1, "Dorp is verplicht"),
+    neighborhood: z.string().min(1, "Wijk is verplicht"),
+  }),
   anonymousParticipation: z.boolean().default(false),
   role: z.enum(['user', 'center_admin']),
 });
@@ -61,8 +64,7 @@ export default function AuthPage() {
       password: "",
       displayName: "",
       phone: "",
-      village: "",
-      neighborhood: "",
+      location: { village: "", neighborhood: "" },
       anonymousParticipation: false,
       role: 'user',
     },
@@ -221,26 +223,19 @@ export default function AuthPage() {
 
                       <FormField
                         control={registerForm.control}
-                        name="village"
+                        name="location"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Dorp</FormLabel>
+                            <FormLabel>Locatie</FormLabel>
                             <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="neighborhood"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Wijk</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
+                              <LocationSelector
+                                defaultVillage={registerForm.getValues("location.village")}
+                                defaultNeighborhood={registerForm.getValues("location.neighborhood")}
+                                onLocationSelect={({ village, neighborhood }) => {
+                                  registerForm.setValue("location.village", village);
+                                  registerForm.setValue("location.neighborhood", neighborhood);
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -343,26 +338,19 @@ export default function AuthPage() {
 
                       <FormField
                         control={registerForm.control}
-                        name="village"
+                        name="location"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Dorp</FormLabel>
+                            <FormLabel>Locatie</FormLabel>
                             <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={registerForm.control}
-                        name="neighborhood"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Wijk</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
+                              <LocationSelector
+                                defaultVillage={registerForm.getValues("location.village")}
+                                defaultNeighborhood={registerForm.getValues("location.neighborhood")}
+                                onLocationSelect={({ village, neighborhood }) => {
+                                  registerForm.setValue("location.village", village);
+                                  registerForm.setValue("location.neighborhood", neighborhood);
+                                }}
+                              />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
