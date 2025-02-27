@@ -388,7 +388,14 @@ export default function CenterAdminPage() {
           <Form {...editActivityForm}>
             <form 
               className="space-y-4"
-              onSubmit={editActivityForm.handleSubmit((data) => updateActivityMutation.mutate(data))}
+              onSubmit={editActivityForm.handleSubmit((data) => {
+                if (editingActivity) {
+                  updateActivityMutation.mutate({
+                    ...data,
+                    centerId: editingActivity.centerId
+                  });
+                }
+              })}
             >
               <FormField
                 control={editActivityForm.control}

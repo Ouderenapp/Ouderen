@@ -166,6 +166,11 @@ export class DatabaseStorage implements IStorage {
     try {
       // Ensure date is a proper Date object if it's included in updates
       const updatesWithFormattedDate = { ...updates };
+      
+      // Convert string date to proper Date object if present
+      if (updates.date && typeof updates.date === 'string') {
+        updatesWithFormattedDate.date = new Date(updates.date);
+      }
 
       // Log for debugging
       console.log('Updating activity with data:', updatesWithFormattedDate);

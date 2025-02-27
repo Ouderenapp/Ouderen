@@ -12,8 +12,7 @@ export const updateActivitySchema = z.object({
   date: z.string()
     .refine(str => !isNaN(Date.parse(str)), {
       message: "Invalid date format",
-    })
-    .transform(str => new Date(str)),
+    }),
   capacity: z.number().int().positive(),
 });
 
