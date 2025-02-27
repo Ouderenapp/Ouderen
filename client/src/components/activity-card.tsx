@@ -4,7 +4,7 @@ import { Link } from "wouter";
 import { formatDistanceToNow, format } from "date-fns";
 import type { Activity } from "@shared/schema";
 import { Calendar, Users } from "lucide-react";
-import { useAuth } from "@/hooks/auth";
+import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 
 interface ActivityCardProps {
