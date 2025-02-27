@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Check, ChevronsUpDown } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import {
   Command,
@@ -15,6 +14,54 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 
+// Statische lijst van Nederlandse steden en dorpen
+const DUTCH_PLACES = [
+  "Amsterdam",
+  "Rotterdam",
+  "Den Haag",
+  "Utrecht",
+  "Eindhoven",
+  "Groningen",
+  "Tilburg",
+  "Almere",
+  "Breda",
+  "Nijmegen",
+  "Enschede",
+  "Haarlem",
+  "Arnhem",
+  "Zaanstad",
+  "Amersfoort",
+  "Apeldoorn",
+  "Nijmegen",
+  "Enschede",
+  "Haarlem",
+  "Den Bosch",
+  "Zwolle",
+  "Maastricht",
+  "Leiden",
+  "Dordrecht",
+  "Zoetermeer",
+  "Delft",
+  "Alkmaar",
+  "Hilversum",
+  "Oss",
+  "Amstelveen"
+].sort();
+
+// Standaard wijken die voor elke stad/dorp beschikbaar zijn
+const DEFAULT_NEIGHBORHOODS = [
+  "Centrum",
+  "Noord",
+  "Zuid",
+  "Oost",
+  "West",
+  "Nieuw-West",
+  "Zuidoost",
+  "Noordwest",
+  "Zuidwest",
+  "Buitengebied"
+].sort();
+
 type LocationData = {
   village: string;
   neighborhood: string;
@@ -28,40 +75,9 @@ interface LocationSelectorProps {
 
 export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeighborhood }: LocationSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+  const [openNeighborhood, setOpenNeighborhood] = useState(false);
   const [selectedVillage, setSelectedVillage] = useState(defaultVillage || "");
   const [selectedNeighborhood, setSelectedNeighborhood] = useState(defaultNeighborhood || "");
-
-  // Zoek dorpen via Overpass API
-  const { data: villages = [], isLoading } = useQuery({
-    queryKey: [`/api/activities`, searchTerm],
-    queryFn: async () => {
-      if (!searchTerm || searchTerm.length < 2) return [];
-
-      try {
-        const query = `[out:json][timeout:60];area["ISO3166-1"="NL"]->.nl;(node["place"="city"]["name"~"${searchTerm}", i](area.nl);node["place"="town"]["name"~"${searchTerm}", i](area.nl);node["place"="village"]["name"~"${searchTerm}", i](area.nl););out body;`;
-
-        console.log('Searching for villages with query:', searchTerm);
-        const response = await fetch("https://overpass-api.de/api/interpreter", {
-          method: "POST",
-          body: query,
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded'
-          }
-        });
-
-        const data = await response.json();
-        return data.elements
-          .filter((item: any) => item.tags && item.tags.name)
-          .map((item: any) => item.tags.name)
-          .sort();
-      } catch (error) {
-        console.error('Error:', error);
-        return [];
-      }
-    },
-    enabled: searchTerm.length >= 2
-  });
 
   return (
     <div className="flex flex-col gap-4">
@@ -79,44 +95,77 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0">
           <Command>
-            <CommandInput 
-              placeholder="Type om te zoeken..." 
-              value={searchTerm}
-              onValueChange={setSearchTerm}
-            />
-            <CommandEmpty>
-              {searchTerm.length < 2 
-                ? "Type minimaal 2 letters..."
-                : isLoading 
-                  ? "Zoeken..." 
-                  : "Geen plaatsen gevonden"}
-            </CommandEmpty>
+            <CommandInput placeholder="Zoek een plaats..." />
+            <CommandEmpty>Geen plaatsen gevonden</CommandEmpty>
             <CommandGroup>
-              {villages.map((village) => (
+              {DUTCH_PLACES.map((place) => (
                 <CommandItem
-                  key={village}
+                  key={place}
                   onSelect={() => {
-                    setSelectedVillage(village);
-                    setSelectedNeighborhood("Centrum");
+                    setSelectedVillage(place);
+                    setSelectedNeighborhood("");
                     setOpen(false);
                     onLocationSelect({
-                      village,
-                      neighborhood: "Centrum"
+                      village: place,
+                      neighborhood: ""
                     });
                   }}
                 >
                   <Check
                     className={`mr-2 h-4 w-4 ${
-                      selectedVillage === village ? "opacity-100" : "opacity-0"
+                      selectedVillage === place ? "opacity-100" : "opacity-0"
                     }`}
                   />
-                  {village}
+                  {place}
                 </CommandItem>
               ))}
             </CommandGroup>
           </Command>
         </PopoverContent>
       </Popover>
+
+      {selectedVillage && (
+        <Popover open={openNeighborhood} onOpenChange={setOpenNeighborhood}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              className="justify-between"
+            >
+              {selectedNeighborhood || "Selecteer een wijk"}
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[300px] p-0">
+            <Command>
+              <CommandInput placeholder="Zoek een wijk..." />
+              <CommandEmpty>Geen wijken gevonden</CommandEmpty>
+              <CommandGroup>
+                {DEFAULT_NEIGHBORHOODS.map((neighborhood) => (
+                  <CommandItem
+                    key={neighborhood}
+                    onSelect={() => {
+                      setSelectedNeighborhood(neighborhood);
+                      setOpenNeighborhood(false);
+                      onLocationSelect({
+                        village: selectedVillage,
+                        neighborhood
+                      });
+                    }}
+                  >
+                    <Check
+                      className={`mr-2 h-4 w-4 ${
+                        selectedNeighborhood === neighborhood ? "opacity-100" : "opacity-0"
+                      }`}
+                    />
+                    {neighborhood}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
     </div>
   );
 }
