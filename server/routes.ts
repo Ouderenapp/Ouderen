@@ -1,11 +1,11 @@
-import type { Express } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, insertCenterSchema } from "@shared/schema";
+import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, insertCenterSchema, type User } from "@shared/schema";
 import { hashPassword } from "./auth";
 
 // Middleware om te controleren of een gebruiker een center admin is
-function isCenterAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
+function isCenterAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated() || req.user?.role !== 'center_admin') {
     return res.status(403).json({ message: "Alleen buurthuis beheerders hebben toegang tot deze functie" });
   }
@@ -61,7 +61,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/centers/:id", async (req, res) => {
-    const center = await storage.getCenter(parseInt(req.params.id));
+    const centerId = parseInt(req.params.id);
+    if (isNaN(centerId)) {
+        return res.status(400).json({message: "Invalid center ID"});
+    }
+    const center = await storage.getCenter(centerId);
     if (!center) {
       return res.status(404).json({ message: "Buurthuis niet gevonden" });
     }
@@ -86,6 +90,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/centers/:id", isCenterAdmin, async (req, res) => {
     const centerId = parseInt(req.params.id);
+    if (isNaN(centerId)) {
+        return res.status(400).json({message: "Invalid center ID"});
+    }
     const center = await storage.getCenter(centerId);
 
     if (!center) {
@@ -104,6 +111,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/activities", async (req, res) => {
     try {
       const centerId = req.query.centerId ? parseInt(req.query.centerId as string) : undefined;
+      if (req.query.centerId && isNaN(parseInt(req.query.centerId as string))) {
+          return res.status(400).json({message: "Invalid center ID"});
+      }
 
       // Als het een buurthuis admin is, alleen activiteiten van eigen buurthuis tonen
       if (req.user?.role === 'center_admin') {
@@ -142,6 +152,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put("/api/activities/:id", isCenterAdmin, async (req, res) => {
     const activityId = parseInt(req.params.id);
+    if (isNaN(activityId)) {
+        return res.status(400).json({message: "Invalid activity ID"});
+    }
     const activity = await storage.getActivity(activityId);
 
     if (!activity) {
@@ -159,6 +172,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/activities/:id", isCenterAdmin, async (req, res) => {
     const activityId = parseInt(req.params.id);
+    if (isNaN(activityId)) {
+        return res.status(400).json({message: "Invalid activity ID"});
+    }
     const activity = await storage.getActivity(activityId);
 
     if (!activity) {
@@ -175,7 +191,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.get("/api/activities/:id", async (req, res) => {
-    const activity = await storage.getActivity(parseInt(req.params.id));
+    const activityId = parseInt(req.params.id);
+
+    if (isNaN(activityId)) {
+      return res.status(400).json({ message: "Ongeldige activiteit ID" });
+    }
+
+    const activity = await storage.getActivity(activityId);
     if (!activity) {
       return res.status(404).json({ message: "Activity not found" });
     }
@@ -186,6 +208,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/activities/:id/waitlist", async (req, res) => {
     try {
       const activityId = parseInt(req.params.id);
+      if (isNaN(activityId)) {
+          return res.status(400).json({message: "Invalid activity ID"});
+      }
       const waitlistEntries = await storage.getWaitlist(activityId);
       const users = await Promise.all(
         waitlistEntries.map(entry => storage.getUser(entry.userId))
@@ -228,6 +253,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const activityId = parseInt(req.params.id);
+      if (isNaN(activityId)) {
+          return res.status(400).json({message: "Invalid activity ID"});
+      }
       const userId = req.user!.id;
 
       // Check if activity exists and is full
@@ -269,6 +297,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const activityId = parseInt(req.params.id);
+      if (isNaN(activityId)) {
+          return res.status(400).json({message: "Invalid activity ID"});
+      }
       const userId = req.user!.id;
 
       await storage.removeFromWaitlist(userId, activityId);
@@ -297,7 +328,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Registrations
   app.get("/api/activities/:id/registrations", async (req, res) => {
-    const registrations = await storage.getRegistrations(parseInt(req.params.id));
+    const activityId = parseInt(req.params.id);
+    if (isNaN(activityId)) {
+        return res.status(400).json({message: "Invalid activity ID"});
+    }
+    const registrations = await storage.getRegistrations(activityId);
     const users = await Promise.all(
       registrations.map(r => storage.getUser(r.userId))
     );
@@ -331,6 +366,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/activities/:id/register", async (req, res) => {
     const activityId = parseInt(req.params.id);
+    if (isNaN(activityId)) {
+        return res.status(400).json({message: "Invalid activity ID"});
+    }
     const result = insertRegistrationSchema.safeParse({
       userId: req.body.userId,
       activityId
@@ -371,6 +409,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.delete("/api/activities/:id/register", async (req, res) => {
     const activityId = parseInt(req.params.id);
+    if (isNaN(activityId)) {
+        return res.status(400).json({message: "Invalid activity ID"});
+    }
     const userId = req.body.userId;
 
     await storage.deleteRegistration(userId, activityId);
@@ -389,11 +430,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // New route to get user's activities
   app.get("/api/users/:id/activities", async (req, res) => {
-    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+        return res.status(400).json({message: "Invalid user ID"});
+    }
+    if (!req.isAuthenticated() || req.user?.id !== userId) {
       return res.status(401).json({ message: "Niet geautoriseerd" });
     }
 
-    const registrations = await storage.getRegistrationsByUser(parseInt(req.params.id));
+    const registrations = await storage.getRegistrationsByUser(userId);
     const activities = await Promise.all(
       registrations.map(r => storage.getActivity(r.activityId))
     );
@@ -403,7 +448,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // New route to update user settings
   app.patch("/api/users/:id", async (req, res, next) => {
     try {
-      if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
+      const userId = parseInt(req.params.id);
+      if (isNaN(userId)) {
+          return res.status(400).json({message: "Invalid user ID"});
+      }
+      if (!req.isAuthenticated() || req.user?.id !== userId) {
         return res.sendStatus(403);
       }
 
@@ -439,7 +488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         updateData.neighborhood = neighborhood;
       }
 
-      const user = await storage.updateUser(parseInt(req.params.id), updateData);
+      const user = await storage.updateUser(userId, updateData);
 
       res.json(user);
     } catch (err) {
@@ -449,26 +498,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Reminder routes
   app.get("/api/users/:id/reminders", async (req, res) => {
-    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+        return res.status(400).json({message: "Invalid user ID"});
+    }
+    if (!req.isAuthenticated() || req.user?.id !== userId) {
       return res.status(401).json({ message: "Niet geautoriseerd" });
     }
 
-    const reminders = await storage.getRemindersByUser(parseInt(req.params.id));
+    const reminders = await storage.getRemindersByUser(userId);
     res.json(reminders);
   });
 
   app.get("/api/users/:id/upcoming-reminders", async (req, res) => {
-    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
+    const userId = parseInt(req.params.id);
+    if (isNaN(userId)) {
+        return res.status(400).json({message: "Invalid user ID"});
+    }
+    if (!req.isAuthenticated() || req.user?.id !== userId) {
       return res.status(401).json({ message: "Niet geautoriseerd" });
     }
 
-    const reminders = await storage.getUpcomingReminders(parseInt(req.params.id));
+    const reminders = await storage.getUpcomingReminders(userId);
     res.json(reminders);
   });
 
   app.patch("/api/reminders/:id", async (req, res) => {
     try {
       const reminderId = parseInt(req.params.id);
+      if (isNaN(reminderId)) {
+          return res.status(400).json({message: "Invalid reminder ID"});
+      }
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Niet geautoriseerd" });
       }
