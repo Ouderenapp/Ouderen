@@ -248,6 +248,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Activity not found" });
     }
 
+    // Controleer of de centrum beheerder zich niet aanmeldt voor eigen activiteit
+    const center = await storage.getCenter(activity.centerId);
+    if (center && center.adminId === req.body.userId) {
+      return res.status(400).json({ message: "Als beheerder kunt u zich niet aanmelden voor uw eigen activiteiten" });
+    }
+
     const registrations = await storage.getRegistrations(activityId);
     if (registrations.length >= activity.capacity) {
       return res.status(400).json({ message: "Activity is full" });
