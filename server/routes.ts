@@ -215,9 +215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             id: user.id,
             village: user.village,
             neighborhood: user.neighborhood,
-            anonymousParticipation: true,
-            offersCarpooling: user.offersCarpooling,
-            wantsCarpooling: user.wantsCarpooling
+            anonymousParticipation: true
           };
         } else {
           // Anders stuur de volledige gebruikersinfo
@@ -226,9 +224,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             displayName: user?.displayName,
             village: user?.village,
             neighborhood: user?.neighborhood,
-            anonymousParticipation: false,
-            offersCarpooling: user.offersCarpooling,
-            wantsCarpooling: user.wantsCarpooling
+            anonymousParticipation: false
           };
         }
       });
@@ -240,40 +236,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const activityId = parseInt(req.params.id);
     const result = insertRegistrationSchema.safeParse({
       userId: req.body.userId,
-      activityId,
-      needsReminder: req.body.needsReminder !== false,
-      offersCarpooling: req.body.offersCarpooling || false,
-      carpoolingSeats: req.body.carpoolingSeats,
-      wantsCarpooling: req.body.wantsCarpooling || false,
+      activityId
     });
 
     if (!result.success) {
-      return res.status(400).json({ message: "Ongeldige registratie data" });
+      return res.status(400).json({ message: "Invalid registration data" });
     }
 
     const activity = await storage.getActivity(activityId);
     if (!activity) {
-      return res.status(404).json({ message: "Activiteit niet gevonden" });
+      return res.status(404).json({ message: "Activity not found" });
     }
 
     const registrations = await storage.getRegistrations(activityId);
     if (registrations.length >= activity.capacity) {
-      // Activity is full - check if waitlist is enabled
-      if (activity.enableWaitlist) {
-        // Add to waitlist instead
-        const waitlistEntry = await storage.createWaitlistEntry({
-          userId: req.body.userId,
-          activityId,
-          position: 0 // This will be set by the createWaitlistEntry method
-        });
-        
-        return res.status(202).json({ 
-          message: "Activiteit is vol. Je bent op de wachtlijst geplaatst.",
-          waitlistEntry 
-        });
-      } else {
-        return res.status(400).json({ message: "Activiteit is vol en wachtlijst is niet beschikbaar" });
-      }
+      return res.status(400).json({ message: "Activity is full" });
     }
 
     const registration = await storage.createRegistration(result.data);
@@ -288,353 +265,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(204).send();
   });
 
-  // Waitlist routes
-  app.get("/api/activities/:id/waitlist", async (req, res) => {
-    try {
-      const activityId = parseInt(req.params.id);
-      const activity = await storage.getActivity(activityId);
-      
-      if (!activity) {
-        return res.status(404).json({ message: "Activiteit niet gevonden" });
-      }
-      
-      if (!activity.enableWaitlist) {
-        return res.status(400).json({ message: "Wachtlijst is niet ingeschakeld voor deze activiteit" });
-      }
-      
-      const waitlistEntries = await storage.getWaitlistEntries(activityId);
-      
-      // Get user info for each entry
-      const usersOnWaitlist = await Promise.all(
-        waitlistEntries.map(async entry => {
-          const user = await storage.getUser(entry.userId);
-          
-          if (!user) return null;
-          
-          // Respect anonymity settings
-          if (user.anonymousParticipation) {
-            return {
-              position: entry.position,
-              joinDate: entry.joinDate,
-              user: {
-                id: user.id,
-                village: user.village,
-                neighborhood: user.neighborhood,
-                anonymousParticipation: true
-              }
-            };
-          } else {
-            return {
-              position: entry.position,
-              joinDate: entry.joinDate,
-              user: {
-                id: user.id,
-                displayName: user.displayName,
-                village: user.village,
-                neighborhood: user.neighborhood,
-                anonymousParticipation: false
-              }
-            };
-          }
-        })
-      );
-      
-      res.json(usersOnWaitlist.filter(u => u !== null));
-    } catch (error) {
-      console.error("Error getting waitlist:", error);
-      res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van de wachtlijst" });
-    }
-  });
-  
-  app.post("/api/activities/:id/waitlist", async (req, res) => {
-    try {
-      const activityId = parseInt(req.params.id);
-      const userId = req.body.userId;
-      
-      const activity = await storage.getActivity(activityId);
-      if (!activity) {
-        return res.status(404).json({ message: "Activiteit niet gevonden" });
-      }
-      
-      if (!activity.enableWaitlist) {
-        return res.status(400).json({ message: "Wachtlijst is niet ingeschakeld voor deze activiteit" });
-      }
-      
-      // Check if user is already on the waitlist
-      const waitlistEntries = await storage.getWaitlistEntries(activityId);
-      const existingEntry = waitlistEntries.find(entry => entry.userId === userId);
-      
-      if (existingEntry) {
-        return res.status(400).json({ message: "Gebruiker staat al op de wachtlijst" });
-      }
-      
-      // Check if user is already registered
-      const existingRegistration = await storage.getRegistration(userId, activityId);
-      if (existingRegistration) {
-        return res.status(400).json({ message: "Gebruiker is al geregistreerd voor deze activiteit" });
-      }
-      
-      const waitlistEntry = await storage.createWaitlistEntry({
-        userId,
-        activityId,
-        position: 0 // Will be set by the storage method
-      });
-      
-      res.status(201).json(waitlistEntry);
-    } catch (error) {
-      console.error("Error adding to waitlist:", error);
-      res.status(500).json({ message: "Er is een fout opgetreden bij het toevoegen aan de wachtlijst" });
-    }
-  });
-  
-  app.delete("/api/activities/:id/waitlist", async (req, res) => {
-    try {
-      const activityId = parseInt(req.params.id);
-      const userId = req.body.userId;
-      
-      await storage.deleteWaitlistEntry(userId, activityId);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error removing from waitlist:", error);
-      res.status(500).json({ message: "Er is een fout opgetreden bij het verwijderen van de wachtlijst" });
-    }
-  });
-  
-  // Carpooling routes
-  app.get("/api/activities/:id/carpool", async (req, res) => {
-    try {
-      const activityId = parseInt(req.params.id);
-      
-      const activity = await storage.getActivity(activityId);
-      if (!activity) {
-        return res.status(404).json({ message: "Activiteit niet gevonden" });
-      }
-      
-      if (!activity.enableCarpooling) {
-        return res.status(400).json({ message: "Carpoolen is niet ingeschakeld voor deze activiteit" });
-      }
-      
-      // Get all carpool groups for this activity
-      const carpoolGroups = await storage.getCarpoolGroups(activityId);
-      
-      // Get detailed information for each group
-      const groupsWithDetails = await Promise.all(
-        carpoolGroups.map(async group => {
-          const driver = await storage.getUser(group.driverId);
-          
-          // Get all passengers
-          const passengers = await db.select().from(carpoolPassengers)
-            .where(eq(carpoolPassengers.carpoolGroupId, group.id));
-          
-          const passengersWithDetails = await Promise.all(
-            passengers.map(async p => {
-              const passengerUser = await storage.getUser(p.passengerId);
-              
-              if (!passengerUser) return null;
-              
-              // Respect anonymity settings
-              if (passengerUser.anonymousParticipation) {
-                return {
-                  id: passengerUser.id,
-                  village: passengerUser.village,
-                  neighborhood: passengerUser.neighborhood,
-                  pickupLocation: p.pickupLocation
-                };
-              } else {
-                return {
-                  id: passengerUser.id,
-                  displayName: passengerUser.displayName,
-                  phone: passengerUser.phone,
-                  village: passengerUser.village,
-                  neighborhood: passengerUser.neighborhood,
-                  pickupLocation: p.pickupLocation
-                };
-              }
-            })
-          );
-          
-          return {
-            ...group,
-            driver: driver ? {
-              id: driver.id,
-              displayName: driver.anonymousParticipation ? undefined : driver.displayName,
-              phone: driver.anonymousParticipation ? undefined : driver.phone,
-              village: driver.village,
-              neighborhood: driver.neighborhood
-            } : null,
-            passengers: passengersWithDetails.filter(p => p !== null)
-          };
-        })
-      );
-      
-      res.json(groupsWithDetails);
-    } catch (error) {
-      console.error("Error getting carpool groups:", error);
-      res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van carpool groepen" });
-    }
-  });
-  
-  app.post("/api/activities/:id/carpool", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Je moet ingelogd zijn om carpool groepen aan te maken" });
-      }
-      
-      const activityId = parseInt(req.params.id);
-      const activity = await storage.getActivity(activityId);
-      
-      if (!activity) {
-        return res.status(404).json({ message: "Activiteit niet gevonden" });
-      }
-      
-      if (!activity.enableCarpooling) {
-        return res.status(400).json({ message: "Carpoolen is niet ingeschakeld voor deze activiteit" });
-      }
-      
-      // Check if the user is registered for this activity
-      const registration = await storage.getRegistration(req.user.id, activityId);
-      if (!registration) {
-        return res.status(400).json({ message: "Je moet geregistreerd zijn voor deze activiteit om te kunnen carpoolen" });
-      }
-      
-      // Create a new carpool group
-      const carpoolGroup = await storage.createCarpoolGroup({
-        activityId,
-        driverId: req.user.id,
-        availableSeats: req.body.availableSeats || 4,
-        departureLocation: req.body.departureLocation || `${req.user.neighborhood}, ${req.user.village}`,
-        departureTime: new Date(req.body.departureTime) || activity.date
-      });
-      
-      res.status(201).json(carpoolGroup);
-    } catch (error) {
-      console.error("Error creating carpool group:", error);
-      res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van een carpool groep" });
-    }
-  });
-  
-  app.post("/api/carpool/:groupId/join", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Je moet ingelogd zijn om aan te sluiten bij een carpool groep" });
-      }
-      
-      const groupId = parseInt(req.params.groupId);
-      const [group] = await db.select().from(carpoolGroups).where(eq(carpoolGroups.id, groupId));
-      
-      if (!group) {
-        return res.status(404).json({ message: "Carpool groep niet gevonden" });
-      }
-      
-      // Check if the user is registered for this activity
-      const registration = await storage.getRegistration(req.user.id, group.activityId);
-      if (!registration) {
-        return res.status(400).json({ message: "Je moet geregistreerd zijn voor deze activiteit om te kunnen carpoolen" });
-      }
-      
-      // Check if there are available seats
-      if (group.availableSeats <= 0) {
-        return res.status(400).json({ message: "Deze carpool groep is vol" });
-      }
-      
-      // Add user as passenger
-      const passenger = await storage.addPassengerToCarpoolGroup({
-        carpoolGroupId: groupId,
-        passengerId: req.user.id,
-        pickupLocation: req.body.pickupLocation || `${req.user.neighborhood}, ${req.user.village}`
-      });
-      
-      res.status(201).json(passenger);
-    } catch (error) {
-      console.error("Error joining carpool group:", error);
-      res.status(500).json({ message: "Er is een fout opgetreden bij het aansluiten bij een carpool groep" });
-    }
-  });
-  
-  app.delete("/api/carpool/:groupId/leave", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Je moet ingelogd zijn om een carpool groep te verlaten" });
-      }
-      
-      const groupId = parseInt(req.params.groupId);
-      
-      // If user is the driver, delete the whole group
-      const [group] = await db.select().from(carpoolGroups).where(eq(carpoolGroups.id, groupId));
-      
-      if (!group) {
-        return res.status(404).json({ message: "Carpool groep niet gevonden" });
-      }
-      
-      if (group.driverId === req.user.id) {
-        // Delete all passengers first
-        await db.delete(carpoolPassengers).where(eq(carpoolPassengers.carpoolGroupId, groupId));
-        // Then delete the group
-        await db.delete(carpoolGroups).where(eq(carpoolGroups.id, groupId));
-      } else {
-        // Just remove the passenger
-        await storage.removePassengerFromCarpoolGroup(req.user.id, groupId);
-      }
-      
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error leaving carpool group:", error);
-      res.status(500).json({ message: "Er is een fout opgetreden bij het verlaten van een carpool groep" });
-    }
-  });
-  
-  // Reminders routes
-  app.get("/api/users/:id/reminders", async (req, res) => {
-    try {
-      if (!req.isAuthenticated() || req.user.id !== parseInt(req.params.id)) {
-        return res.status(401).json({ message: "Niet geautoriseerd" });
-      }
-      
-      const reminders = await storage.getReminders(req.user.id);
-      
-      // Add activity details to each reminder
-      const remindersWithActivityDetails = await Promise.all(
-        reminders.map(async reminder => {
-          const activity = await storage.getActivity(reminder.activityId);
-          return {
-            ...reminder,
-            activity: activity ? {
-              id: activity.id,
-              name: activity.name,
-              date: activity.date
-            } : null
-          };
-        })
-      );
-      
-      res.json(remindersWithActivityDetails);
-    } catch (error) {
-      console.error("Error getting reminders:", error);
-      res.status(500).json({ message: "Er is een fout opgetreden bij het ophalen van herinneringen" });
-    }
-  });
-  
-  // Enable/disable reminders
-  app.patch("/api/users/:id/notification-settings", async (req, res) => {
-    try {
-      if (!req.isAuthenticated() || req.user.id !== parseInt(req.params.id)) {
-        return res.status(401).json({ message: "Niet geautoriseerd" });
-      }
-      
-      const { notificationsEnabled } = req.body;
-      
-      if (notificationsEnabled === undefined) {
-        return res.status(400).json({ message: "notificationsEnabled veld is vereist" });
-      }
-      
-      const user = await storage.updateUser(req.user.id, { notificationsEnabled });
-      res.json(user);
-    } catch (error) {
-      console.error("Error updating notification settings:", error);
-      res.status(500).json({ message: "Er is een fout opgetreden bij het bijwerken van de meldingsinstellingen" });
-    }
-  });
-
   // New route to get user's activities
   app.get("/api/users/:id/activities", async (req, res) => {
     if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
@@ -646,29 +276,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       registrations.map(r => storage.getActivity(r.activityId))
     );
     res.json(activities.filter(a => a !== undefined));
-  });
-  
-  // Get user's waitlisted activities
-  app.get("/api/users/:id/waitlisted", async (req, res) => {
-    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
-      return res.status(401).json({ message: "Niet geautoriseerd" });
-    }
-    
-    const waitlistEntries = await storage.getWaitlistByUser(parseInt(req.params.id));
-    const activities = await Promise.all(
-      waitlistEntries.map(async entry => {
-        const activity = await storage.getActivity(entry.activityId);
-        if (!activity) return null;
-        
-        return {
-          ...activity,
-          waitlistPosition: entry.position,
-          joinDate: entry.joinDate
-        };
-      })
-    );
-    
-    res.json(activities.filter(a => a !== null));
   });
 
   // New route to update user settings
@@ -684,10 +291,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         displayName,
         phone,
         village,
-        neighborhood,
-        notificationsEnabled,
-        offersCarpooling,
-        wantsCarpooling
+        neighborhood
       } = req.body;
 
       // Maak een object met alleen de ingevulde velden
@@ -711,18 +315,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (neighborhood) {
         updateData.neighborhood = neighborhood;
-      }
-      
-      if (notificationsEnabled !== undefined) {
-        updateData.notificationsEnabled = notificationsEnabled;
-      }
-      
-      if (offersCarpooling !== undefined) {
-        updateData.offersCarpooling = offersCarpooling;
-      }
-      
-      if (wantsCarpooling !== undefined) {
-        updateData.wantsCarpooling = wantsCarpooling;
       }
 
       const user = await storage.updateUser(parseInt(req.params.id), updateData);

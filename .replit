@@ -11,23 +11,7 @@ build = ["npm", "run", "build"]
 run = ["npm", "run", "start"]
 
 [[ports]]
-localPort = 5003
-externalPort = 80
-
-[[ports]]
-localPort = 5004
-externalPort = 80
-
-[[ports]]
-localPort = 5005
-externalPort = 80
-
-[[ports]]
-localPort = 5006
-externalPort = 80
-
-[[ports]]
-localPort = 5007
+localPort = 5001
 externalPort = 80
 
 [workflows]

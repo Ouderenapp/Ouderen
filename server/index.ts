@@ -57,29 +57,12 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // Try a range of ports starting from the preferred one
-  const tryListen = (portToUse: number) => {
-    if (portToUse > 5010) {
-      console.error("Couldn't find an available port between 5003 and 5010");
-      return;
-    }
-    
-    server.listen({
-      port: portToUse,
-      host: "0.0.0.0",
-      reusePort: true,
-    }, () => {
-      log(`serving on port ${portToUse}`);
-    }).on('error', (err: any) => {
-      if (err.code === 'EADDRINUSE') {
-        log(`Port ${portToUse} is in use, trying ${portToUse + 1}...`);
-        tryListen(portToUse + 1);
-      } else {
-        console.error('Server error:', err);
-      }
-    });
-  };
-  
-  // Start with port 5003
-  tryListen(5003);
+  const port = 5001;
+  server.listen({
+    port,
+    host: "0.0.0.0",
+    reusePort: true,
+  }, () => {
+    log(`serving on port ${port}`);
+  });
 })();

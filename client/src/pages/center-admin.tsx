@@ -19,187 +19,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActivityCard } from "@/components/activity-card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox"; // Import Checkbox
-
-
-const ActivityForm = ({ defaultValues, onSubmit, buttonLabel }: {
-    defaultValues?: any;
-    onSubmit: (data: any) => void;
-    buttonLabel: string;
-  }) => {
-    const form = useForm({
-      resolver: zodResolver(insertActivitySchema),
-      defaultValues: defaultValues || {
-        name: "",
-        description: "",
-        date: "",
-        capacity: 10,
-        imageUrl: "",
-        requiredMaterials: "",
-        availableFacilities: "",
-        enableWaitlist: true,
-        enableCarpooling: true,
-      },
-    });
-
-    return (
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Naam activiteit</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="description"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Beschrijving</FormLabel>
-                <FormControl>
-                  <Textarea {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="date"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Datum en tijd</FormLabel>
-                <FormControl>
-                  <Input
-                    {...field}
-                    type="datetime-local"
-                    value={field.value ? new Date(field.value).toISOString().slice(0, 16) : ""}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="capacity"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Capaciteit</FormLabel>
-                <FormControl>
-                  <Input {...field} type="number" min={1} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="imageUrl"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Afbeelding URL</FormLabel>
-                <FormControl>
-                  <Input {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="requiredMaterials"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Benodigde materialen (deelnemers moeten dit meenemen)</FormLabel>
-                <FormControl>
-                  <Textarea {...field} placeholder="Bijv. sportkleding, waterfles, etc." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="availableFacilities"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Beschikbare faciliteiten</FormLabel>
-                <FormControl>
-                  <Textarea {...field} placeholder="Bijv. WIFI, koffie/thee, parkeerplaatsen, etc." />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name="enableWaitlist"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Wachtlijst inschakelen
-                    </FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      Laat deelnemers op een wachtlijst plaatsen als de activiteit vol is
-                    </p>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="enableCarpooling"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>
-                      Carpoolen inschakelen
-                    </FormLabel>
-                    <p className="text-sm text-muted-foreground">
-                      Laat deelnemers carpool groepen maken en delen
-                    </p>
-                  </div>
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <Button type="submit">{buttonLabel}</Button>
-        </form>
-      </Form>
-    );
-  };
 
 export default function CenterAdminPage() {
   const { user } = useAuth();
@@ -260,10 +79,6 @@ export default function CenterAdminPage() {
       date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
       capacity: 10,
       centerId: center?.id,
-      requiredMaterials: "",
-      availableFacilities: "",
-      enableWaitlist: true,
-      enableCarpooling: true,
     },
   });
 
@@ -289,7 +104,7 @@ export default function CenterAdminPage() {
       });
     },
   });
-
+  
   // Form voor het bewerken van activiteiten
   const editActivityForm = useForm({
     resolver: zodResolver(updateActivitySchema),
@@ -301,7 +116,7 @@ export default function CenterAdminPage() {
       capacity: 0,
     }
   });
-
+  
   // Bijwerken van een activiteit
   const updateActivityMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -324,7 +139,7 @@ export default function CenterAdminPage() {
       });
     },
   });
-
+  
   // Open het bewerken dialog met de geselecteerde activiteit
   const handleEditActivity = (activity: Activity) => {
     setEditingActivity(activity);
@@ -451,10 +266,103 @@ export default function CenterAdminPage() {
       {/* Nieuwe activiteit aanmaken */}
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Nieuwe Activiteit</h2>
-        <ActivityForm
-          onSubmit={createActivityMutation.mutate}
-          buttonLabel={createActivityMutation.isPending ? "Bezig met aanmaken..." : "Activiteit aanmaken"}
-        />
+        <Form {...activityForm}>
+          <form
+            onSubmit={activityForm.handleSubmit((data) =>
+              createActivityMutation.mutate(data)
+            )}
+            className="space-y-4"
+          >
+            <FormField
+              control={activityForm.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Naam</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={activityForm.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Beschrijving</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={activityForm.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Afbeelding URL</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={activityForm.control}
+              name="date"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Datum en tijd</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="datetime-local" 
+                      {...field} 
+                      value={field.value ? field.value.slice(0, 16) : ""} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={activityForm.control}
+              name="capacity"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Capaciteit</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      {...field}
+                      onChange={(e) =>
+                        field.onChange(parseInt(e.target.value))
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              disabled={createActivityMutation.isPending}
+            >
+              {createActivityMutation.isPending
+                ? "Bezig met aanmaken..."
+                : "Activiteit aanmaken"}
+            </Button>
+          </form>
+        </Form>
       </div>
 
       {/* Bestaande activiteiten */}
@@ -480,14 +388,7 @@ export default function CenterAdminPage() {
           <Form {...editActivityForm}>
             <form 
               className="space-y-4"
-              onSubmit={editActivityForm.handleSubmit((data) => {
-                if (editingActivity) {
-                  updateActivityMutation.mutate({
-                    ...data,
-                    centerId: editingActivity.centerId
-                  });
-                }
-              })}
+              onSubmit={editActivityForm.handleSubmit((data) => updateActivityMutation.mutate(data))}
             >
               <FormField
                 control={editActivityForm.control}
