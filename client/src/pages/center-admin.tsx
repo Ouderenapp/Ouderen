@@ -79,29 +79,7 @@ export default function CenterAdminPage() {
       date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
       capacity: 10,
       centerId: center?.id,
-    },
-  });
-
-  // Aanmaken van nieuwe activiteit
-  const createActivityMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/activities", data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/activities`] });
-      activityForm.reset();
-      toast({
-        title: "Activiteit aangemaakt",
-        description: "De activiteit is succesvol aangemaakt.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fout bij aanmaken activiteit",
-        description: error.message,
-        variant: "destructive",
-      });
+      price: undefined,
     },
   });
 
@@ -114,13 +92,46 @@ export default function CenterAdminPage() {
       imageUrl: "",
       date: "",
       capacity: 0,
+      price: undefined,
     }
+  });
+
+  // Aanmaken van nieuwe activiteit
+  const createActivityMutation = useMutation({
+    mutationFn: async (data: any) => {
+      console.log("Creating activity with data:", data);
+      const response = await apiRequest("POST", "/api/activities", {
+        ...data,
+        centerId: center?.id,
+        price: data.price ? parseFloat(data.price) : undefined,
+      });
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/activities`] });
+      activityForm.reset();
+      toast({
+        title: "Activiteit aangemaakt",
+        description: "De activiteit is succesvol aangemaakt.",
+      });
+    },
+    onError: (error: Error) => {
+      console.error("Error creating activity:", error);
+      toast({
+        title: "Fout bij aanmaken activiteit",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
   });
 
   // Bijwerken van een activiteit
   const updateActivityMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("PUT", `/api/activities/${editingActivity?.id}`, data);
+      const response = await apiRequest("PUT", `/api/activities/${editingActivity?.id}`, {
+        ...data,
+        price: data.price ? parseFloat(data.price) : undefined,
+      });
       return response.json();
     },
     onSuccess: () => {
@@ -149,6 +160,7 @@ export default function CenterAdminPage() {
       imageUrl: activity.imageUrl,
       date: new Date(activity.date).toISOString().slice(0, 16),
       capacity: activity.capacity,
+      price: activity.price ? parseFloat(activity.price.toString()) : undefined,
     });
   };
 
@@ -268,9 +280,10 @@ export default function CenterAdminPage() {
         <h2 className="text-2xl font-bold">Nieuwe Activiteit</h2>
         <Form {...activityForm}>
           <form
-            onSubmit={activityForm.handleSubmit((data) =>
-              createActivityMutation.mutate(data)
-            )}
+            onSubmit={activityForm.handleSubmit((data) => {
+              console.log("Form submitted with data:", data);
+              createActivityMutation.mutate(data);
+            })}
             className="space-y-4"
           >
             <FormField
@@ -306,7 +319,7 @@ export default function CenterAdminPage() {
               name="imageUrl"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Afbeelding URL</FormLabel>
+                  <FormLabel>Afbeelding URL (optioneel)</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -365,7 +378,7 @@ export default function CenterAdminPage() {
                       step="0.01"
                       placeholder="0.00"
                       {...field}
-                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                     />
                   </FormControl>
                   <FormMessage />
@@ -495,7 +508,7 @@ export default function CenterAdminPage() {
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                       />
                     </FormControl>
                     <FormMessage />
