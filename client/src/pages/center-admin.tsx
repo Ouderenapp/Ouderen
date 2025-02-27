@@ -51,7 +51,7 @@ export default function CenterAdminPage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/centers/my-center"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/centers/my-center`] });
       toast({
         title: "Buurthuis bijgewerkt",
         description: "De wijzigingen zijn succesvol opgeslagen.",
@@ -86,7 +86,7 @@ export default function CenterAdminPage() {
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/activities`] });
       activityForm.reset();
       toast({
         title: "Activiteit aangemaakt",
@@ -105,20 +105,22 @@ export default function CenterAdminPage() {
   if (isLoadingCenter || isLoadingActivities) {
     return (
       <div className="space-y-8">
-        <h1 className="text-4xl font-bold">Buurthuis laden...</h1>
-        <p className="mt-2 text-xl text-muted-foreground">
-          Even geduld alstublieft.
-        </p>
+        <div className="h-64 animate-pulse rounded-lg bg-muted" />
+        <div className="grid gap-6 md:grid-cols-2">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-96 animate-pulse rounded-lg bg-muted" />
+          ))}
+        </div>
       </div>
     );
   }
 
-  if (!center) {
+  if (!user || user.role !== 'center_admin') {
     return (
       <div className="space-y-8">
-        <h1 className="text-4xl font-bold">Deze pagina is alleen toegankelijk voor buurthuisbeheerders</h1>
+        <h1 className="text-4xl font-bold">Geen toegang</h1>
         <p className="mt-2 text-xl text-muted-foreground">
-          Als u een buurthuisbeheerder bent en dit bericht ziet, neem dan contact op met de beheerder.
+          Deze pagina is alleen toegankelijk voor buurthuisbeheerders.
         </p>
       </div>
     );
@@ -129,7 +131,7 @@ export default function CenterAdminPage() {
       <div>
         <h1 className="text-4xl font-bold">Beheer Buurthuis</h1>
         <p className="mt-2 text-xl text-muted-foreground">
-          Beheer de informatie en activiteiten van {center.name}
+          Beheer de informatie en activiteiten van {center?.name}
         </p>
       </div>
 
@@ -217,7 +219,7 @@ export default function CenterAdminPage() {
         <Form {...activityForm}>
           <form
             onSubmit={activityForm.handleSubmit((data) =>
-              createActivityMutation.mutate({ ...data, centerId: center.id })
+              createActivityMutation.mutate({ ...data, centerId: center?.id })
             )}
             className="space-y-4"
           >

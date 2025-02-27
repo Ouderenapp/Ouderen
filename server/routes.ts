@@ -16,12 +16,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
   // Nieuwe route om het buurthuis van een admin op te halen
-  app.get("/api/centers/my-center", isCenterAdmin, async (req, res) => {
-    const centers = await storage.getCentersByAdmin(req.user!.id);
-    if (centers.length === 0) {
-      return res.status(404).json({ message: "Geen buurthuis gevonden" });
+  app.get("/api/centers/my-center", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        console.log('User not authenticated');
+        return res.status(401).json({ message: "Niet ingelogd" });
+      }
+
+      if (req.user?.role !== 'center_admin') {
+        console.log('User not center admin:', req.user?.role);
+        return res.status(403).json({ message: "Geen beheerder" });
+      }
+
+      console.log('Authenticated user:', req.user);
+      const centers = await storage.getCentersByAdmin(req.user.id);
+      console.log('Found centers:', centers);
+
+      if (centers.length === 0) {
+        // Als er geen buurthuis is, maken we er een aan
+        const center = await storage.createCenter({
+          name: req.user.displayName,
+          address: `${req.user.neighborhood}, ${req.user.village}`,
+          description: `Buurthuis ${req.user.displayName} in ${req.user.village}`,
+          imageUrl: "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+          adminId: req.user.id,
+          village: req.user.village
+        });
+        console.log('Created new center:', center);
+        return res.json(center);
+      }
+
+      res.json(centers[0]); // Een admin heeft maar één buurthuis
+    } catch (error) {
+      console.error('Error in /api/centers/my-center:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden" });
     }
-    res.json(centers[0]); // Een admin heeft maar één buurthuis
   });
 
   // Centers
