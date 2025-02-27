@@ -124,16 +124,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
 
-      // Voor normale gebruikers, haal activiteiten op voor specifiek buurthuis
+      // Voor normale gebruikers
       if (centerId) {
+        // Haal activiteiten op voor het specifieke buurthuis
         const activities = await storage.getActivities(centerId);
         console.log('Returning activities for center:', activities);
         return res.json(activities);
       }
 
-      // Als er geen centerId is opgegeven, return een lege lijst
+      // Als er geen centerId is opgegeven, stuur een lege lijst terug
       return res.json([]);
-
     } catch (error) {
       console.error('Error getting activities:', error);
       res.status(500).json({ message: "Er is een fout opgetreden" });

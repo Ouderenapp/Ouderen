@@ -12,15 +12,8 @@ export default function CenterPage() {
   });
 
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
-    queryKey: [`/api/activities/center/${centerId}`],
-    queryFn: async () => {
-      const response = await fetch(`/api/activities?centerId=${centerId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch activities');
-      }
-      return response.json();
-    },
-    enabled: !!centerId,
+    queryKey: ['/api/activities', { centerId }],
+    enabled: !!centerId && !isNaN(centerId),
   });
 
   if (isLoadingCenter || isLoadingActivities) {
