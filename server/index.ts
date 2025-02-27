@@ -95,7 +95,7 @@ process.on('unhandledRejection', (reason, promise) => {
     }
 
     // Start server
-    const port = 5000;
+    const port = 5001;
     server.listen(port, "0.0.0.0", () => {
       console.log(`Server started successfully on http://0.0.0.0:${port}`);
       log(`Server started successfully, serving on port ${port}`);
