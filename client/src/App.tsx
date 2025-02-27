@@ -10,6 +10,7 @@ import Center from "@/pages/center";
 import Activity from "@/pages/activity";
 import Profile from "@/pages/profile";
 import Auth from "@/pages/auth";
+import CenterAdmin from "@/pages/center-admin";
 import Navigation from "@/components/navigation";
 
 function Router() {
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/activities/:id" component={Activity} />
       <Route path="/profile" component={Profile} />
       <Route path="/auth" component={Auth} />
+      <Route path="/center-admin" component={CenterAdmin} />
       <Route component={NotFound} />
     </Switch>
   );

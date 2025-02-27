@@ -2,6 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, insertCenterSchema } from "@shared/schema";
+import { hashPassword } from "./auth"; // Assuming this function exists for password hashing
 
 // Middleware om te controleren of een gebruiker een center admin is
 function isCenterAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
@@ -265,6 +266,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const user = await storage.updateUser(parseInt(req.params.id), updateData);
 
       res.json(user);
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  // Wijzig alleen het relevante deel van de /api/register route
+  app.post("/api/register", async (req, res, next) => {
+    try {
+      const existingUser = await storage.getUserByUsername(req.body.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Gebruikersnaam is al in gebruik" });
+      }
+
+      const user = await storage.createUser({
+        ...req.body,
+        password: await hashPassword(req.body.password),
+      });
+
+      // Als dit een buurthuis beheerder is, maak dan ook een buurthuis aan
+      if (user.role === 'center_admin') {
+        await storage.createCenter({
+          name: user.displayName,
+          address: `${user.neighborhood}, ${user.village}`,
+          description: `Buurthuis ${user.displayName} in ${user.village}`,
+          imageUrl: "https://images.unsplash.com/photo-1577495508048-b635879837f1?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+          adminId: user.id,
+          village: user.village
+        });
+      }
+
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(user);
+      });
     } catch (err) {
       next(err);
     }

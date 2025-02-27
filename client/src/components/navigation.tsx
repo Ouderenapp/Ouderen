@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Building2, User, Eye } from "lucide-react";
+import { Building2, User, Eye, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "./ui/button";
@@ -19,6 +19,7 @@ export default function Navigation() {
   const links = [
     { href: "/", label: "Activiteitencentra", icon: Building2 },
     ...(user ? [{ href: "/profile", label: "Mijn Profiel", icon: User }] : []),
+    ...(user?.role === 'center_admin' ? [{ href: "/center-admin", label: "Beheer Buurthuis", icon: Settings }] : []),
   ];
 
   return (
