@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Building2, User, Eye, Settings, BarChart } from "lucide-react";
+import { Building2, User, Eye, Settings, BarChart, HelpCircle } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "./ui/button";
@@ -25,6 +25,8 @@ export default function Navigation() {
       { href: "/center-admin", label: "Beheer Buurthuis", icon: Settings },
       { href: "/activity-stats", label: "Statistieken", icon: BarChart },
     ] : []),
+    // Help page accessible to all
+    { href: "/help", label: "Hulp", icon: HelpCircle },
   ];
 
   return (

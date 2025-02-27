@@ -53,4 +53,39 @@
   [data-accessibility-mode="true"] a {
     @apply focus:ring-4 focus:ring-primary focus:outline-none;
   }
+  
+  /* Verbeterde leesbaarheid voor oudere gebruikers */
+  [data-accessibility-mode="true"] p,
+  [data-accessibility-mode="true"] span,
+  [data-accessibility-mode="true"] div {
+    line-height: 1.7;
+    letter-spacing: 0.01em;
+  }
+  
+  /* Extra contrast voor formuliervelden */
+  [data-accessibility-mode="true"] input,
+  [data-accessibility-mode="true"] select,
+  [data-accessibility-mode="true"] textarea {
+    @apply border-2 border-input focus:border-primary;
+  }
+  
+  /* Aangepaste stijlen per niveau */
+  [data-accessibility-level="2"] button,
+  [data-accessibility-level="2"] a.button {
+    @apply py-3 px-4;
+  }
+  
+  [data-accessibility-level="3"] button,
+  [data-accessibility-level="3"] a.button {
+    @apply py-4 px-6;
+  }
+  
+  /* Extra ruimte tussen elementen */
+  [data-accessibility-level="2"] .space-y-4 {
+    @apply space-y-5;
+  }
+  
+  [data-accessibility-level="3"] .space-y-4 {
+    @apply space-y-6;
+  }
 }

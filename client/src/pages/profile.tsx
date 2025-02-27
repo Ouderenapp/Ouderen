@@ -12,6 +12,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RemindersPanel } from "@/components/reminders-panel";
+import AccessibilitySettings from "@/components/accessibility-settings"; // Added import statement
 
 export default function Profile() {
   const { user } = useAuth();
@@ -68,13 +69,6 @@ export default function Profile() {
     },
   });
 
-  const handleUnregister = (activityId: number) => {
-    const confirmUnregister = window.confirm("Weet u zeker dat u zich wilt afmelden voor deze activiteit?");
-    if (confirmUnregister) {
-      unregister.mutate(activityId);
-    }
-  };
-  
   const updateProfile = useMutation({
     mutationFn: async (data: typeof formData) => {
       if (!user) return;
@@ -89,7 +83,7 @@ export default function Profile() {
       });
     },
   });
-  
+
   const handleEditClick = () => {
     if (user) {
       setFormData({
@@ -101,11 +95,11 @@ export default function Profile() {
       setIsEditing(true);
     }
   };
-  
+
   const handleCancelEdit = () => {
     setIsEditing(false);
   };
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfile.mutate(formData);
@@ -179,7 +173,7 @@ export default function Profile() {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefoonnummer</Label>
                   <Input 
@@ -189,7 +183,7 @@ export default function Profile() {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="village">Gemeente</Label>
                   <Input 
@@ -199,7 +193,7 @@ export default function Profile() {
                     required
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="neighborhood">Wijk</Label>
                   <Input 
@@ -209,7 +203,7 @@ export default function Profile() {
                     required
                   />
                 </div>
-                
+
                 <div className="flex space-x-2 pt-2">
                   <Button type="submit" disabled={updateProfile.isPending}>
                     {updateProfile.isPending ? "Bezig..." : "Opslaan"}
