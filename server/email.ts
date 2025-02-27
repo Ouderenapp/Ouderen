@@ -1,4 +1,5 @@
 import { MailService } from '@sendgrid/mail';
+import type { MailDataRequired } from '@sendgrid/mail';
 
 // Initialize the mail service
 const mailService = new MailService();
@@ -17,27 +18,33 @@ export function initializeEmailService(apiKey: string, fromEmail?: string) {
   if (fromEmail) {
     FROM_EMAIL = fromEmail;
   }
+  // Test the configuration
+  console.log('Email service initialized with from address:', FROM_EMAIL);
 }
 
 export async function sendEmail(params: EmailParams): Promise<boolean> {
   try {
-    const msg = {
+    console.log('Attempting to send email to:', params.to);
+    const msg: MailDataRequired = {
       to: params.to,
       from: FROM_EMAIL,
       subject: params.subject,
-    } as any;
-
-    if (params.html) {
-      msg.html = params.html;
-    }
-    if (params.text) {
-      msg.text = params.text;
-    }
+      content: [
+        {
+          type: params.html ? 'text/html' : 'text/plain',
+          value: params.html || params.text || '',
+        },
+      ],
+    };
 
     await mailService.send(msg);
+    console.log('Email sent successfully to:', params.to);
     return true;
-  } catch (error) {
+  } catch (error: any) {
     console.error('SendGrid email error:', error);
+    if (error.response) {
+      console.error('SendGrid API response:', error.response.body);
+    }
     return false;
   }
 }

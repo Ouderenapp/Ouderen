@@ -22,7 +22,8 @@ export default function Profile() {
     displayName: "",
     phone: "",
     village: "",
-    neighborhood: ""
+    neighborhood: "",
+    username: "" // Add email field
   });
 
   const { data: myActivities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
@@ -93,7 +94,8 @@ export default function Profile() {
         displayName: user.displayName,
         phone: user.phone,
         village: user.village,
-        neighborhood: user.neighborhood
+        neighborhood: user.neighborhood,
+        username: user.username // Include username in formData
       });
       setIsEditing(true);
     }
@@ -164,45 +166,59 @@ export default function Profile() {
                   <label className="text-lg font-medium">Telefoonnummer</label>
                   <p className="text-xl">{user.phone}</p>
                 </div>
+                <div>
+                  <label className="text-lg font-medium">E-mailadres</label>
+                  <p className="text-xl">{user.username}</p>
+                </div>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-2">
+                  <Label htmlFor="username">E-mailadres</Label>
+                  <Input
+                    id="username"
+                    type="email"
+                    value={formData.username}
+                    onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
                   <Label htmlFor="displayName">Naam</Label>
-                  <Input 
-                    id="displayName" 
+                  <Input
+                    id="displayName"
                     value={formData.displayName}
-                    onChange={(e) => setFormData({...formData, displayName: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="phone">Telefoonnummer</Label>
-                  <Input 
-                    id="phone" 
+                  <Input
+                    id="phone"
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="village">Gemeente</Label>
-                  <Input 
-                    id="village" 
+                  <Input
+                    id="village"
                     value={formData.village}
-                    onChange={(e) => setFormData({...formData, village: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, village: e.target.value })}
                     required
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="neighborhood">Wijk</Label>
-                  <Input 
-                    id="neighborhood" 
+                  <Input
+                    id="neighborhood"
                     value={formData.neighborhood}
-                    onChange={(e) => setFormData({...formData, neighborhood: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, neighborhood: e.target.value })}
                     required
                   />
                 </div>

@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
-import { LocationSelector } from "@/components/location-selector";
+//import { LocationSelector } from "@/components/location-selector"; // Removed as per edit
 
 const loginSchema = z.object({
   username: z.string()
@@ -35,10 +35,8 @@ const loginSchema = z.object({
 const registerSchema = loginSchema.extend({
   displayName: z.string().min(1, "Naam is verplicht"),
   phone: z.string().min(1, "Telefoonnummer is verplicht"),
-  location: z.object({
-    village: z.string().min(1, "Dorp is verplicht"),
-    neighborhood: z.string().min(1, "Wijk is verplicht"),
-  }),
+  village: z.string().min(1, "Dorp is verplicht"),
+  neighborhood: z.string().min(1, "Wijk is verplicht"),
   anonymousParticipation: z.boolean().default(false),
   role: z.enum(['user', 'center_admin']),
 });
@@ -66,7 +64,8 @@ export default function AuthPage() {
       password: "",
       displayName: "",
       phone: "",
-      location: { village: "", neighborhood: "" },
+      village: "",
+      neighborhood: "",
       anonymousParticipation: false,
       role: 'user',
     },
@@ -228,19 +227,26 @@ export default function AuthPage() {
 
                       <FormField
                         control={registerForm.control}
-                        name="location"
+                        name="village"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Locatie</FormLabel>
+                            <FormLabel>Gemeente</FormLabel>
                             <FormControl>
-                              <LocationSelector
-                                defaultVillage={registerForm.getValues("location.village")}
-                                defaultNeighborhood={registerForm.getValues("location.neighborhood")}
-                                onLocationSelect={({ village, neighborhood }) => {
-                                  registerForm.setValue("location.village", village);
-                                  registerForm.setValue("location.neighborhood", neighborhood);
-                                }}
-                              />
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="neighborhood"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Wijk</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -346,25 +352,31 @@ export default function AuthPage() {
 
                       <FormField
                         control={registerForm.control}
-                        name="location"
+                        name="village"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Locatie</FormLabel>
+                            <FormLabel>Gemeente</FormLabel>
                             <FormControl>
-                              <LocationSelector
-                                defaultVillage={registerForm.getValues("location.village")}
-                                defaultNeighborhood={registerForm.getValues("location.neighborhood")}
-                                onLocationSelect={({ village, neighborhood }) => {
-                                  registerForm.setValue("location.village", village);
-                                  registerForm.setValue("location.neighborhood", neighborhood);
-                                }}
-                              />
+                              <Input {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
+                      <FormField
+                        control={registerForm.control}
+                        name="neighborhood"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Wijk</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                       <Button
                         type="submit"
                         className="w-full"
