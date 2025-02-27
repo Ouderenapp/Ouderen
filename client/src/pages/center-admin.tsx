@@ -73,7 +73,7 @@ export default function CenterAdminPage() {
       name: "",
       description: "",
       imageUrl: "",
-      date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
+      date: new Date().toISOString().split('.')[0], // Format: YYYY-MM-DDTHH:mm:ss
       capacity: 10,
       centerId: center?.id,
     },
@@ -82,7 +82,12 @@ export default function CenterAdminPage() {
   // Aanmaken van nieuwe activiteit
   const createActivityMutation = useMutation({
     mutationFn: async (data: any) => {
-      const response = await apiRequest("POST", "/api/activities", data);
+      // Convert string date to ISO string
+      const formattedData = {
+        ...data,
+        date: new Date(data.date).toISOString()
+      };
+      const response = await apiRequest("POST", "/api/activities", formattedData);
       return response.json();
     },
     onSuccess: () => {

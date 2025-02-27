@@ -102,9 +102,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Activities 
   app.get("/api/activities", async (req, res) => {
-    const centerId = req.query.centerId ? parseInt(req.query.centerId as string) : undefined;
-    const activities = await storage.getActivities(centerId);
-    res.json(activities);
+    try {
+      const centerId = req.query.centerId ? parseInt(req.query.centerId as string) : undefined;
+
+      // Als het een buurthuis admin is, alleen activiteiten van eigen buurthuis tonen
+      if (req.user?.role === 'center_admin') {
+        const center = await storage.getCentersByAdmin(req.user.id);
+        if (center.length > 0) {
+          const activities = await storage.getActivities(center[0].id);
+          return res.json(activities);
+        }
+        return res.json([]);
+      }
+
+      // Voor normale gebruikers, activiteiten van opgegeven buurthuis tonen
+      const activities = await storage.getActivities(centerId);
+      res.json(activities);
+    } catch (error) {
+      console.error('Error getting activities:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
   });
 
   app.post("/api/activities", isCenterAdmin, async (req, res) => {
