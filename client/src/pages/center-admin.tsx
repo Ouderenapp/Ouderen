@@ -19,19 +19,20 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActivityCard } from "@/components/activity-card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useState } from "react";
+import type { z } from "zod";
+
+type FormData = z.infer<typeof insertActivitySchema>;
 
 export default function CenterAdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
 
-  // Direct het buurthuis ophalen voor de ingelogde admin
   const { data: center, isLoading: isLoadingCenter } = useQuery<Center>({
     queryKey: [`/api/centers/my-center`],
     enabled: !!user?.id && user?.role === 'center_admin',
   });
 
-  // Activiteiten ophalen voor dit buurthuis
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: [`/api/activities`, { centerId: center?.id }],
     enabled: !!center?.id,
@@ -45,6 +46,33 @@ export default function CenterAdminPage() {
       description: center?.description || "",
       imageUrl: center?.imageUrl || "",
     },
+  });
+
+  // Form voor het aanmaken van nieuwe activiteiten
+  const activityForm = useForm<FormData>({
+    resolver: zodResolver(insertActivitySchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      imageUrl: "",
+      date: new Date().toISOString().slice(0, 16),
+      capacity: 10,
+      centerId: center?.id,
+      price: undefined,
+    },
+  });
+
+  // Form voor het bewerken van activiteiten
+  const editActivityForm = useForm<FormData>({
+    resolver: zodResolver(updateActivitySchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      imageUrl: "",
+      date: "",
+      capacity: 0,
+      price: undefined,
+    }
   });
 
   // Bijwerken van buurthuis informatie
@@ -69,42 +97,22 @@ export default function CenterAdminPage() {
     },
   });
 
-  // Form voor het aanmaken van nieuwe activiteiten
-  const activityForm = useForm({
-    resolver: zodResolver(insertActivitySchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      imageUrl: "",
-      date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
-      capacity: 10,
-      centerId: center?.id,
-      price: undefined,
-    },
-  });
-
-  // Form voor het bewerken van activiteiten
-  const editActivityForm = useForm({
-    resolver: zodResolver(updateActivitySchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      imageUrl: "",
-      date: "",
-      capacity: 0,
-      price: undefined,
-    }
-  });
-
   // Aanmaken van nieuwe activiteit
   const createActivityMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: FormData) => {
       console.log("Creating activity with data:", data);
+      if (!center?.id) {
+        throw new Error("Geen buurthuis ID gevonden");
+      }
       const response = await apiRequest("POST", "/api/activities", {
         ...data,
-        centerId: center?.id,
-        price: data.price ? parseFloat(data.price) : undefined,
+        centerId: center.id,
+        price: data.price ? parseFloat(data.price.toString()) : undefined,
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Er is een fout opgetreden");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -127,11 +135,18 @@ export default function CenterAdminPage() {
 
   // Bijwerken van een activiteit
   const updateActivityMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("PUT", `/api/activities/${editingActivity?.id}`, {
+    mutationFn: async (data: FormData) => {
+      if (!editingActivity?.id) {
+        throw new Error("Geen activiteit ID gevonden");
+      }
+      const response = await apiRequest("PUT", `/api/activities/${editingActivity.id}`, {
         ...data,
-        price: data.price ? parseFloat(data.price) : undefined,
+        price: data.price ? parseFloat(data.price.toString()) : undefined,
       });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Er is een fout opgetreden");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -151,6 +166,15 @@ export default function CenterAdminPage() {
     },
   });
 
+  const handleSubmitActivity = async (data: FormData) => {
+    console.log("Form submitted with data:", data);
+    try {
+      await createActivityMutation.mutateAsync(data);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    }
+  };
+
   // Open het bewerken dialog met de geselecteerde activiteit
   const handleEditActivity = (activity: Activity) => {
     setEditingActivity(activity);
@@ -160,7 +184,7 @@ export default function CenterAdminPage() {
       imageUrl: activity.imageUrl,
       date: new Date(activity.date).toISOString().slice(0, 16),
       capacity: activity.capacity,
-      price: activity.price ? parseFloat(activity.price.toString()) : undefined,
+      price: activity.price ? Number(activity.price) : undefined,
     });
   };
 
@@ -280,10 +304,7 @@ export default function CenterAdminPage() {
         <h2 className="text-2xl font-bold">Nieuwe Activiteit</h2>
         <Form {...activityForm}>
           <form
-            onSubmit={activityForm.handleSubmit((data) => {
-              console.log("Form submitted with data:", data);
-              createActivityMutation.mutate(data);
-            })}
+            onSubmit={activityForm.handleSubmit(handleSubmitActivity)}
             className="space-y-4"
           >
             <FormField
@@ -338,7 +359,6 @@ export default function CenterAdminPage() {
                     <Input
                       type="datetime-local"
                       {...field}
-                      value={field.value ? field.value.slice(0, 16) : ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -378,7 +398,11 @@ export default function CenterAdminPage() {
                       step="0.01"
                       placeholder="0.00"
                       {...field}
-                      onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                      value={field.value ?? ""}
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        field.onChange(value ? parseFloat(value) : undefined);
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
@@ -496,6 +520,7 @@ export default function CenterAdminPage() {
                   </FormItem>
                 )}
               />
+
               <FormField
                 control={editActivityForm.control}
                 name="price"
@@ -508,7 +533,11 @@ export default function CenterAdminPage() {
                         step="0.01"
                         placeholder="0.00"
                         {...field}
-                        onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
+                        value={field.value ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          field.onChange(value ? parseFloat(value) : undefined);
+                        }}
                       />
                     </FormControl>
                     <FormMessage />
