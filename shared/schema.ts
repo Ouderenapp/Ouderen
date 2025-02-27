@@ -22,8 +22,8 @@ export const centers = pgTable("centers", {
   address: text("address").notNull(),
   description: text("description").notNull(),
   imageUrl: text("image_url").notNull(),
-  adminId: integer("admin_id").notNull(), // Reference to the user who manages this center
-  village: text("village").notNull(), // Add village to filter centers by location
+  adminId: integer("admin_id").notNull(), 
+  village: text("village").notNull(), 
 });
 
 export const activities = pgTable("activities", {
@@ -54,7 +54,9 @@ export const insertUserSchema = createInsertSchema(users).pick({
 });
 
 export const insertCenterSchema = createInsertSchema(centers);
-export const insertActivitySchema = createInsertSchema(activities);
+export const insertActivitySchema = createInsertSchema(activities).extend({
+  date: z.string().transform((str) => new Date(str)),
+});
 export const insertRegistrationSchema = createInsertSchema(registrations);
 
 export type InsertUser = z.infer<typeof insertUserSchema>;

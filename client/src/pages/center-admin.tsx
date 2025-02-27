@@ -73,7 +73,7 @@ export default function CenterAdminPage() {
       name: "",
       description: "",
       imageUrl: "",
-      date: new Date().toISOString().split('.')[0], // Format: YYYY-MM-DDTHH:mm:ss
+      date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
       capacity: 10,
       centerId: center?.id,
     },
@@ -82,12 +82,7 @@ export default function CenterAdminPage() {
   // Aanmaken van nieuwe activiteit
   const createActivityMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Convert string date to ISO string
-      const formattedData = {
-        ...data,
-        date: new Date(data.date).toISOString()
-      };
-      const response = await apiRequest("POST", "/api/activities", formattedData);
+      const response = await apiRequest("POST", "/api/activities", data);
       return response.json();
     },
     onSuccess: () => {
@@ -224,7 +219,7 @@ export default function CenterAdminPage() {
         <Form {...activityForm}>
           <form
             onSubmit={activityForm.handleSubmit((data) =>
-              createActivityMutation.mutate({ ...data, centerId: center?.id })
+              createActivityMutation.mutate(data)
             )}
             className="space-y-4"
           >
@@ -277,7 +272,11 @@ export default function CenterAdminPage() {
                 <FormItem>
                   <FormLabel>Datum en tijd</FormLabel>
                   <FormControl>
-                    <Input type="datetime-local" {...field} />
+                    <Input 
+                      type="datetime-local" 
+                      {...field} 
+                      value={field.value ? field.value.slice(0, 16) : ""} 
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
