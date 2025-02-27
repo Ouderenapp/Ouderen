@@ -68,7 +68,7 @@ export const insertCenterSchema = createInsertSchema(centers);
 export const insertActivitySchema = createInsertSchema(activities).extend({
   date: z.string().transform((str) => new Date(str)),
 });
-export const updateActivitySchema = insertActivitySchema.partial();
+// The updateActivitySchema is already defined at the top of the file
 export const insertRegistrationSchema = createInsertSchema(registrations);
 
 export type InsertUser = z.infer<typeof insertUserSchema>;
