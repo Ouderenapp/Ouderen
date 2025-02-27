@@ -119,19 +119,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/activities", async (req, res) => {
     try {
       const centerId = req.query.centerId ? parseInt(req.query.centerId as string) : undefined;
-      console.log('Requested activities for centerId:', centerId);
 
+      // Validate centerId
       if (!centerId || isNaN(centerId)) {
-        console.log('No valid centerId provided, returning empty list');
         return res.json([]);
       }
 
-      // Haal activiteiten op voor het opgegeven buurthuis
+      // Get activities for the specified center
       const activities = await storage.getActivities(centerId);
-      console.log('Returning activities for center:', activities);
-      return res.json(activities);
+
+      // If no activities found, return empty array instead of null
+      return res.json(activities || []);
     } catch (error) {
-      handleError(error, res);
+      console.error('Error in /api/activities:', error);
+      return res.status(500).json({ 
+        message: "Er is een fout opgetreden bij het ophalen van de activiteiten" 
+      });
     }
   });
 
