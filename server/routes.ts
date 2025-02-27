@@ -172,7 +172,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).json({ message: "U heeft geen rechten om deze activiteit te bewerken" });
     }
 
-    const updatedActivity = await storage.updateActivity(activityId, req.body);
+    // Convert date string to Date object if it exists in the request
+    const updateData = {
+      ...req.body,
+      date: req.body.date ? new Date(req.body.date) : undefined
+    };
+
+    const updatedActivity = await storage.updateActivity(activityId, updateData);
     res.json(updatedActivity);
   });
 
