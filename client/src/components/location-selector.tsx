@@ -39,32 +39,48 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
     queryFn: async () => {
       if (!searchTerm || searchTerm.length < 2) return [];
 
-      const query = `
-        [out:json][timeout:25];
-        area["ISO3166-1"="NL"]->.netherlands;
-        (
-          node["place"~"city|town|village"]["name"~"${searchTerm}", i](area.netherlands);
-        );
-        out body;
-        >;
-        out skel qt;
-      `;
+      try {
+        const query = `
+          [out:json][timeout:60];
+          area["ISO3166-1"="NL"]->.nl;
+          (
+            node["place"="city"]["name"~"${searchTerm}", i](area.nl);
+            node["place"="town"]["name"~"${searchTerm}", i](area.nl);
+            node["place"="village"]["name"~"${searchTerm}", i](area.nl);
+          );
+          out body;
+        `;
 
-      const response = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: query
-      });
+        console.log('Searching for villages with query:', searchTerm);
+        const response = await fetch("https://overpass-api.de/api/interpreter", {
+          method: "POST",
+          body: query,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
 
-      if (!response.ok) {
-        throw new Error('Fout bij het ophalen van dorpen');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Found villages:', data);
+
+        if (!data.elements) {
+          console.error('No elements in response:', data);
+          return [];
+        }
+
+        return data.elements
+          .filter((item: any) => item.tags && item.tags.name)
+          .map((item: any) => item.tags.name)
+          .filter((name: string, index: number, self: string[]) => self.indexOf(name) === index)
+          .sort();
+      } catch (error) {
+        console.error('Error fetching villages:', error);
+        return [];
       }
-
-      const data = await response.json();
-      return data.elements
-        .filter((item: any) => item.tags && item.tags.name)
-        .map((item: any) => item.tags.name)
-        .filter((name: string, index: number, self: string[]) => self.indexOf(name) === index)
-        .sort();
     },
     enabled: searchTerm.length >= 2
   });
@@ -75,35 +91,47 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
     queryFn: async () => {
       if (!selectedVillage) return [];
 
-      const query = `
-        [out:json][timeout:25];
-        area["ISO3166-1"="NL"]->.netherlands;
-        area["name"="${selectedVillage}"](area.netherlands)->.searchArea;
-        (
-          node["place"="suburb"](area.searchArea);
-          way["place"="suburb"](area.searchArea);
-          relation["place"="suburb"](area.searchArea);
-        );
-        out body;
-        >;
-        out skel qt;
-      `;
+      try {
+        const query = `
+          [out:json][timeout:60];
+          area["ISO3166-1"="NL"]->.nl;
+          area["name"="${selectedVillage}"](area.nl)->.searchArea;
+          (
+            node["place"="suburb"](area.searchArea);
+          );
+          out body;
+        `;
 
-      const response = await fetch("https://overpass-api.de/api/interpreter", {
-        method: "POST",
-        body: query
-      });
+        console.log('Searching for neighborhoods in:', selectedVillage);
+        const response = await fetch("https://overpass-api.de/api/interpreter", {
+          method: "POST",
+          body: query,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        });
 
-      if (!response.ok) {
-        throw new Error('Fout bij het ophalen van wijken');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('Found neighborhoods:', data);
+
+        if (!data.elements) {
+          console.error('No elements in response:', data);
+          return [];
+        }
+
+        return data.elements
+          .filter((item: any) => item.tags && item.tags.name)
+          .map((item: any) => item.tags.name)
+          .filter((name: string, index: number, self: string[]) => self.indexOf(name) === index)
+          .sort();
+      } catch (error) {
+        console.error('Error fetching neighborhoods:', error);
+        return [];
       }
-
-      const data = await response.json();
-      return data.elements
-        .filter((item: any) => item.tags && item.tags.name)
-        .map((item: any) => item.tags.name)
-        .filter((name: string, index: number, self: string[]) => self.indexOf(name) === index)
-        .sort();
     },
     enabled: !!selectedVillage
   });
