@@ -12,7 +12,7 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RemindersPanel } from "@/components/reminders-panel";
-import AccessibilitySettings from "@/components/accessibility-settings"; // Added import statement
+import AccessibilitySettings from "@/components/accessibility-settings";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -54,7 +54,10 @@ export default function Profile() {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}/activities`] });
+      // Fixed: Added type check for user before accessing its id
+      if (user) {
+        queryClient.invalidateQueries({ queryKey: [`/api/users/${user.id}/activities`] });
+      }
       toast({
         title: "Afmelding geslaagd",
         description: "U bent afgemeld voor deze activiteit.",
@@ -255,7 +258,10 @@ export default function Profile() {
                 key={activity.id}
                 activity={activity}
                 isRegistered={true}
-                onRegister={() => handleUnregister(activity.id)}
+                onRegister={() => {
+                  if (!user) return;
+                  unregister.mutate(activity.id);
+                }}
               />
             ))}
             {(!myActivities || myActivities.length === 0) && (

@@ -3,6 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, insertCenterSchema, type User } from "@shared/schema";
 import { hashPassword } from "./auth";
+import { sendWelcomeEmail, sendActivityRegistrationEmail } from "./email";
 
 // Middleware om te controleren of een gebruiker een center admin is
 function isCenterAdmin(req: Request, res: Response, next: NextFunction) {
@@ -414,6 +415,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       isRead: false
     });
 
+    // Send confirmation email if email service is configured
+    if (process.env.SENDGRID_API_KEY) {
+      const user = await storage.getUser(req.body.userId);
+      const center = await storage.getCenter(activity.centerId);
+      if (user && center) {
+        await sendActivityRegistrationEmail(
+          user.username,
+          user.displayName,
+          activity.name,
+          new Date(activity.date),
+          `${center.name}, ${center.address}`
+        );
+      }
+    }
+
     res.status(201).json(registration);
   });
 
@@ -563,6 +579,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         password: await hashPassword(req.body.password),
       });
+
+      // Send welcome email if email service is configured
+      if (process.env.SENDGRID_API_KEY) {
+        await sendWelcomeEmail(user.username, user.displayName);
+      }
 
       // Als dit een buurthuis beheerder is, maak dan ook een buurthuis aan
       if (user.role === 'center_admin') {

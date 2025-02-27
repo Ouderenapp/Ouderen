@@ -2,10 +2,19 @@ import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
 import { setupVite, serveStatic, log } from "./vite";
+import { initializeEmailService } from "./email";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Initialize email service
+if (!process.env.SENDGRID_API_KEY) {
+  console.warn("Warning: SENDGRID_API_KEY not set. Email notifications will be disabled.");
+} else {
+  initializeEmailService(process.env.SENDGRID_API_KEY);
+  log("Email service initialized");
+}
 
 app.use((req, res, next) => {
   const start = Date.now();
