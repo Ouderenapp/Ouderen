@@ -11,9 +11,10 @@ export default function CenterPage() {
     queryKey: [`/api/centers/${centerId}`],
   });
 
+  // Direct query for activities of this center
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
-    queryKey: ['/api/activities', { centerId }],
-    enabled: !!centerId && !isNaN(centerId),
+    queryKey: [`/api/activities`, { centerId: centerId }],
+    enabled: !!centerId && centerId > 0,
   });
 
   if (isLoadingCenter || isLoadingActivities) {
