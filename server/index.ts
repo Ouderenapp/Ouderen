@@ -8,11 +8,16 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add health check endpoint
+app.get("/health", (req, res) => {
+  res.send("ok");
+});
+
 // Initialize email service
 if (!process.env.SENDGRID_API_KEY) {
   console.warn("Warning: SENDGRID_API_KEY not set. Email notifications will be disabled.");
 } else {
-  initializeEmailService(process.env.SENDGRID_API_KEY);
+  initializeEmailService(process.env.SENDGRID_API_KEY, "w.kastelijn@student.fontys.nl");
   log("Email service initialized");
 }
 
@@ -44,6 +49,15 @@ app.use((req, res, next) => {
   });
 
   next();
+});
+
+// Add global error handlers
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
 (async () => {
