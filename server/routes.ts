@@ -518,5 +518,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+
+  // Add to the existing routes file, after the registrations routes
+  app.get("/api/activities/registrations", isCenterAdmin, async (req, res) => {
+    try {
+      // Haal eerst het buurthuis op van de ingelogde admin
+      const centers = await storage.getCentersByAdmin(req.user!.id);
+      if (centers.length === 0) {
+        return res.json([]);
+      }
+
+      // Haal alle activiteiten op van dit buurthuis
+      const activities = await storage.getActivities(centers[0].id);
+
+      // Haal voor elke activiteit de registraties op
+      const allRegistrations = await Promise.all(
+        activities.map(activity => storage.getRegistrations(activity.id))
+      );
+
+      // Flatten de array van registraties
+      const flattenedRegistrations = allRegistrations.flat();
+
+      res.json(flattenedRegistrations);
+    } catch (error) {
+      console.error('Error getting registrations:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
   return httpServer;
 }

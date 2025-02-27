@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Building2, User, Eye, Settings } from "lucide-react";
+import { Building2, User, Eye, Settings, BarChart } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useTheme } from "@/hooks/use-theme";
 import { Button } from "./ui/button";
@@ -20,8 +20,11 @@ export default function Navigation() {
     { href: "/", label: "Activiteitencentra", icon: Building2 },
     // Only show profile for regular users
     ...(user && user.role === 'user' ? [{ href: "/profile", label: "Mijn Profiel", icon: User }] : []),
-    // Show admin page for center admins
-    ...(user?.role === 'center_admin' ? [{ href: "/center-admin", label: "Beheer Buurthuis", icon: Settings }] : []),
+    // Show admin page and stats for center admins
+    ...(user?.role === 'center_admin' ? [
+      { href: "/center-admin", label: "Beheer Buurthuis", icon: Settings },
+      { href: "/activity-stats", label: "Statistieken", icon: BarChart },
+    ] : []),
   ];
 
   return (
