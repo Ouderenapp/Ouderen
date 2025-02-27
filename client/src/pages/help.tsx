@@ -25,30 +25,72 @@ export default function HelpPage() {
       <Card className="border-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-3xl">
-            <HelpCircle className="h-8 w-8 text-primary" /> Veelgestelde vragen
+            <Book className="h-8 w-8 text-primary" /> Hoe gebruikt u deze app?
           </CardTitle>
           <CardDescription className="text-xl">
-            Antwoorden op de meest voorkomende vragen
+            Hier vindt u uitleg over de belangrijkste functies
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <Accordion type="single" collapsible className="space-y-4">
-            <AccordionItem value="item-1" className="border rounded-lg p-2">
-              <AccordionTrigger className="text-xl px-4">Hoe schrijf ik me in voor een activiteit?</AccordionTrigger>
-              <AccordionContent className="text-lg px-4 pt-2">
-                U kunt zich inschrijven voor activiteiten door naar de pagina van een buurthuis te gaan, een activiteit te selecteren en op de knop "Inschrijven" te klikken. U moet ingelogd zijn om te kunnen inschrijven.
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            <AccordionItem value="item-1" className="border-2 rounded-lg">
+              <AccordionTrigger className="text-2xl p-4">
+                Hoe schrijf ik me in voor een activiteit?
+              </AccordionTrigger>
+              <AccordionContent className="p-6">
+                <div className="space-y-6">
+                  <p className="text-xl">Om deel te nemen aan een activiteit volgt u deze eenvoudige stappen:</p>
+                  <ol className="list-decimal pl-8 space-y-4 text-xl">
+                    <li>Klik op de hoofdpagina op het gewenste buurthuis</li>
+                    <li>Bekijk de beschikbare activiteiten</li>
+                    <li>Klik op een activiteit voor meer informatie</li>
+                    <li>Klik op de grote knop "Inschrijven" om deel te nemen</li>
+                  </ol>
+                  <p className="text-xl">Als de activiteit vol is, kunt u zich ook op de wachtlijst plaatsen.</p>
+                </div>
               </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="item-2" className="border rounded-lg p-2">
-              <AccordionTrigger className="text-xl px-4">Kan ik mijn inschrijving annuleren?</AccordionTrigger>
-              <AccordionContent className="text-lg px-4 pt-2">
-                Ja, u kunt uw inschrijving annuleren door naar uw profiel te gaan en op de knop "Uitschrijven" te klikken bij de betreffende activiteit.
+
+            <AccordionItem value="item-2" className="border-2 rounded-lg">
+              <AccordionTrigger className="text-2xl p-4">
+                Hoe maak ik de tekst groter?
+              </AccordionTrigger>
+              <AccordionContent className="p-6">
+                <div className="space-y-6">
+                  <p className="text-xl">U kunt de tekst groter maken voor betere leesbaarheid:</p>
+                  <ol className="list-decimal pl-8 space-y-4 text-xl">
+                    <li>Zoek de knop met het oog-icoontje rechtsboven in het scherm</li>
+                    <li>Klik één keer op deze knop</li>
+                    <li>De tekst wordt nu direct groter</li>
+                    <li>Klik nogmaals op de knop om terug te gaan naar normale grootte</li>
+                  </ol>
+                  <Button variant="outline" onClick={toggleAccessibilityMode} className="flex items-center gap-2 mt-4 text-xl">
+                    <Eye className="h-6 w-6" />
+                    <span>{theme.isAccessibilityMode ? "Kleinere letters" : "Grotere letters"}</span>
+                  </Button>
+                </div>
               </AccordionContent>
             </AccordionItem>
-            <AccordionItem value="item-3" className="border rounded-lg p-2">
-              <AccordionTrigger className="text-xl px-4">Hoe werkt de wachtlijst?</AccordionTrigger>
-              <AccordionContent className="text-lg px-4 pt-2">
-                Als een activiteit vol is, komt u op de wachtlijst. Als er een plek vrijkomt, wordt de eerste persoon op de wachtlijst automatisch geïnformeerd.
+
+            <AccordionItem value="item-3" className="border-2 rounded-lg">
+              <AccordionTrigger className="text-2xl p-4">
+                Waar vind ik mijn activiteiten?
+              </AccordionTrigger>
+              <AccordionContent className="p-6">
+                <div className="space-y-6">
+                  <p className="text-xl">Om uw aankomende activiteiten te bekijken:</p>
+                  <ol className="list-decimal pl-8 space-y-4 text-xl">
+                    <li>Klik op "Mijn Profiel" in het menu</li>
+                    <li>U ziet direct al uw activiteiten</li>
+                    <li>U krijgt een herinnering een dag van tevoren</li>
+                  </ol>
+                  <Link href="/profile">
+                    <Button className="flex items-center gap-2 mt-4 text-xl">
+                      <Calendar className="h-6 w-6" />
+                      <span>Bekijk mijn activiteiten</span>
+                    </Button>
+                  </Link>
+                </div>
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -58,33 +100,65 @@ export default function HelpPage() {
       <Card className="border-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-3xl">
-            <Book className="h-8 w-8 text-primary" /> Handleiding
+            <Euro className="h-8 w-8 text-primary" /> Kosten & Lidmaatschap
           </CardTitle>
           <CardDescription className="text-xl">
-            Leer hoe u de applicatie kunt gebruiken
+            Informatie over prijzen en betalingen
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Voor deelnemers</h3>
-            <ul className="list-disc pl-6 space-y-2 text-lg">
-              <li>Bekijk beschikbare buurthuizen en hun activiteiten</li>
-              <li>Schrijf u in voor activiteiten die u interesseren</li>
-              <li>Beheer uw profiel en privacy-instellingen</li>
-              <li>Bekijk uw aankomende activiteiten in uw profiel</li>
-            </ul>
-          </div>
-          {user?.role === 'center_admin' && (
-            <div className="space-y-4 border-t pt-4 mt-4">
-              <h3 className="text-xl font-semibold">Voor beheerders</h3>
-              <ul className="list-disc pl-6 space-y-2 text-lg">
-                <li>Beheer uw buurthuis en activiteiten</li>
-                <li>Voeg nieuwe activiteiten toe of bewerk bestaande</li>
-                <li>Bekijk inschrijvingen voor activiteiten</li>
-                <li>Beheer wachtlijsten</li>
-              </ul>
-            </div>
-          )}
+        <CardContent>
+          <Accordion type="single" collapsible className="w-full space-y-4">
+            <AccordionItem value="kosten-1" className="border-2 rounded-lg">
+              <AccordionTrigger className="text-2xl p-4">
+                Wat kost deelname aan activiteiten?
+              </AccordionTrigger>
+              <AccordionContent className="p-6">
+                <div className="space-y-6">
+                  <p className="text-xl">De kosten verschillen per activiteit:</p>
+                  <ul className="list-disc pl-8 space-y-4 text-xl">
+                    <li>Gratis activiteiten: kennismaking en sociale bijeenkomsten</li>
+                    <li>Betaalde activiteiten: workshops, cursussen en speciale evenementen</li>
+                    <li>Lidmaatschap: €5 per maand voor onbeperkt toegang tot alle basis-activiteiten</li>
+                  </ul>
+                  <p className="text-xl mt-4">Bij elke activiteit staat duidelijk aangegeven wat de kosten zijn.</p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="kosten-2" className="border-2 rounded-lg">
+              <AccordionTrigger className="text-2xl p-4">
+                Hoe werkt betalen?
+              </AccordionTrigger>
+              <AccordionContent className="p-6">
+                <div className="space-y-6">
+                  <p className="text-xl">U kunt op verschillende manieren betalen:</p>
+                  <ul className="list-disc pl-8 space-y-4 text-xl">
+                    <li>Direct online via iDEAL of creditcard</li>
+                    <li>Contant bij het buurthuis (alleen voor losse activiteiten)</li>
+                    <li>Automatische incasso voor het maandelijkse lidmaatschap</li>
+                  </ul>
+                  <p className="text-xl mt-4">U ontvangt altijd een bevestiging van uw betaling per e-mail.</p>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            <AccordionItem value="kosten-3" className="border-2 rounded-lg">
+              <AccordionTrigger className="text-2xl p-4">
+                Wat zijn de voordelen van lidmaatschap?
+              </AccordionTrigger>
+              <AccordionContent className="p-6">
+                <div className="space-y-6">
+                  <p className="text-xl">Als lid krijgt u extra voordelen:</p>
+                  <ul className="list-disc pl-8 space-y-4 text-xl">
+                    <li>Gratis deelname aan alle basis-activiteiten</li>
+                    <li>Korting op speciale workshops en evenementen</li>
+                    <li>Voorrang bij populaire activiteiten</li>
+                    <li>Maandelijkse nieuwsbrief met exclusieve activiteiten</li>
+                  </ul>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </CardContent>
       </Card>
 
@@ -117,18 +191,6 @@ export default function HelpPage() {
               </div>
             </Button>
           </Link>
-
-          {user?.role === 'center_admin' && (
-            <Link href="/admin">
-              <Button variant="outline" className="w-full flex items-center justify-start gap-4 p-6 text-xl">
-                <Calendar className="h-8 w-8" />
-                <div>
-                  <div className="font-medium">Beheer</div>
-                  <div className="text-muted-foreground">Beheer uw buurthuis</div>
-                </div>
-              </Button>
-            </Link>
-          )}
         </CardContent>
       </Card>
     </div>
