@@ -57,12 +57,23 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  const port = 5001;
-  server.listen({
-    port,
-    host: "0.0.0.0",
-    reusePort: true,
-  }, () => {
-    log(`serving on port ${port}`);
-  });
+  const port = parseInt(process.env.PORT || '5001');
+  const startServer = (portToUse) => {
+    server.listen({
+      port: portToUse,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
+      log(`serving on port ${portToUse}`);
+    }).on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        log(`Port ${portToUse} is already in use, trying ${portToUse + 1}...`);
+        startServer(portToUse + 1);
+      } else {
+        console.error('Server error:', err);
+      }
+    });
+  };
+  
+  startServer(port);
 })();
