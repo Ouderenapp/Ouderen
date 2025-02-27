@@ -33,49 +33,40 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
   const [selectedVillage, setSelectedVillage] = useState(defaultVillage || "");
   const [selectedNeighborhood, setSelectedNeighborhood] = useState(defaultNeighborhood || "");
 
-  // Zoek dorpen via Nominatim API
+  // Zoek dorpen via Overpass API
   const { data: villages = [], isLoading: isLoadingVillages } = useQuery({
     queryKey: ["villages", searchTerm],
     queryFn: async () => {
-      if (!searchTerm) return [];
+      if (!searchTerm || searchTerm.length < 2) return [];
 
-      // Aangepaste query parameters voor Nederlandse dorpen
-      const params = new URLSearchParams({
-        format: 'json',
-        country: 'Netherlands',
-        q: searchTerm,
-        addressdetails: '1',
-        limit: '10',
-        featuretype: 'city'
+      const query = `
+        [out:json][timeout:25];
+        area["ISO3166-1"="NL"]->.netherlands;
+        (
+          node["place"~"city|town|village"]["name"~"${searchTerm}", i](area.netherlands);
+        );
+        out body;
+        >;
+        out skel qt;
+      `;
+
+      const response = await fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        body: query
       });
-
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?${params.toString()}`
-      );
 
       if (!response.ok) {
         throw new Error('Fout bij het ophalen van dorpen');
       }
 
       const data = await response.json();
-
-      // Filter en format de resultaten
-      return data
-        .filter((item: any) => 
-          item.address && 
-          (item.address.city || item.address.town || item.address.village)
-        )
-        .map((item: any) => ({
-          name: item.address.city || item.address.town || item.address.village,
-          lat: item.lat,
-          lon: item.lon,
-        }))
-        .filter((item: any, index: number, self: any[]) => 
-          // Verwijder duplicaten
-          index === self.findIndex((t) => t.name === item.name)
-        );
+      return data.elements
+        .filter((item: any) => item.tags && item.tags.name)
+        .map((item: any) => item.tags.name)
+        .filter((name: string, index: number, self: string[]) => self.indexOf(name) === index)
+        .sort();
     },
-    enabled: searchTerm.length > 2,
+    enabled: searchTerm.length >= 2
   });
 
   // Zoek wijken voor geselecteerd dorp
@@ -84,36 +75,37 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
     queryFn: async () => {
       if (!selectedVillage) return [];
 
-      const params = new URLSearchParams({
-        format: 'json',
-        country: 'Netherlands',
-        city: selectedVillage,
-        addressdetails: '1',
-        limit: '15',
-        featuretype: 'suburb'
-      });
+      const query = `
+        [out:json][timeout:25];
+        area["ISO3166-1"="NL"]->.netherlands;
+        area["name"="${selectedVillage}"](area.netherlands)->.searchArea;
+        (
+          node["place"="suburb"](area.searchArea);
+          way["place"="suburb"](area.searchArea);
+          relation["place"="suburb"](area.searchArea);
+        );
+        out body;
+        >;
+        out skel qt;
+      `;
 
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?${params.toString()}`
-      );
+      const response = await fetch("https://overpass-api.de/api/interpreter", {
+        method: "POST",
+        body: query
+      });
 
       if (!response.ok) {
         throw new Error('Fout bij het ophalen van wijken');
       }
 
       const data = await response.json();
-
-      return data
-        .filter((item: any) => 
-          item.address && item.address.suburb
-        )
-        .map((item: any) => item.address.suburb)
-        .filter((name: string, index: number, self: string[]) => 
-          // Verwijder duplicaten
-          self.indexOf(name) === index
-        );
+      return data.elements
+        .filter((item: any) => item.tags && item.tags.name)
+        .map((item: any) => item.tags.name)
+        .filter((name: string, index: number, self: string[]) => self.indexOf(name) === index)
+        .sort();
     },
-    enabled: !!selectedVillage,
+    enabled: !!selectedVillage
   });
 
   return (
@@ -126,42 +118,44 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
             aria-expanded={open}
             className="justify-between"
           >
-            {selectedVillage || "Selecteer een dorp"}
+            {selectedVillage || "Selecteer een plaats"}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[300px] p-0">
           <CommandPrimitive>
-            <CommandInput
-              placeholder="Zoek een dorp..."
+            <CommandInput 
+              placeholder="Type om te zoeken..." 
               value={searchTerm}
               onValueChange={setSearchTerm}
             />
             <CommandEmpty>
-              {searchTerm.length > 0 
-                ? `Geen dorpen gevonden voor "${searchTerm}"`
-                : "Begin met typen om dorpen te zoeken..."}
+              {searchTerm.length < 2 
+                ? "Type minimaal 2 letters..."
+                : isLoadingVillages 
+                  ? "Zoeken..." 
+                  : "Geen plaatsen gevonden"}
             </CommandEmpty>
             <CommandGroup>
-              {villages.map((village: any) => (
+              {villages.map((village) => (
                 <CommandItem
-                  key={village.name}
+                  key={village}
                   onSelect={() => {
-                    setSelectedVillage(village.name);
+                    setSelectedVillage(village);
                     setSelectedNeighborhood("");
                     setOpen(false);
                     onLocationSelect({
-                      village: village.name,
+                      village,
                       neighborhood: "",
                     });
                   }}
                 >
                   <Check
                     className={`mr-2 h-4 w-4 ${
-                      selectedVillage === village.name ? "opacity-100" : "opacity-0"
+                      selectedVillage === village ? "opacity-100" : "opacity-0"
                     }`}
                   />
-                  {village.name}
+                  {village}
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -185,9 +179,11 @@ export function LocationSelector({ onLocationSelect, defaultVillage, defaultNeig
             <CommandPrimitive>
               <CommandInput placeholder="Zoek een wijk..." />
               <CommandEmpty>
-                {neighborhoods.length === 0 
-                  ? `Geen wijken gevonden in ${selectedVillage}`
-                  : "Begin met typen om wijken te zoeken..."}
+                {isLoadingNeighborhoods 
+                  ? "Wijken ophalen..." 
+                  : neighborhoods.length === 0
+                    ? `Geen wijken gevonden in ${selectedVillage}`
+                    : "Begin met typen om te zoeken..."}
               </CommandEmpty>
               <CommandGroup>
                 {neighborhoods.map((neighborhood) => (
