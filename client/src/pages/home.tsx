@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { CenterCard } from "@/components/center-card";
+import { OnboardingGuide } from "@/components/onboarding-guide";
 import type { Center } from "@shared/schema";
 
 export default function Home() {
@@ -10,7 +11,7 @@ export default function Home() {
   if (isLoading) {
     return (
       <div className="space-y-8">
-        <h1 className="text-4xl font-bold">Community Centers</h1>
+        <h1 className="text-4xl font-bold">Activiteitencentra</h1>
         <div className="grid gap-6 md:grid-cols-2">
           {[...Array(4)].map((_, i) => (
             <div key={i} className="h-96 animate-pulse rounded-lg bg-muted" />
@@ -22,7 +23,8 @@ export default function Home() {
 
   return (
     <div className="space-y-8">
-      <h1 className="text-4xl font-bold">Community Centers</h1>
+      <OnboardingGuide />
+      <h1 className="text-4xl font-bold">Activiteitencentra</h1>
       <div className="grid gap-6 md:grid-cols-2">
         {centers?.map((center) => (
           <CenterCard key={center.id} center={center} />
