@@ -162,19 +162,16 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateActivity(id: number, data: Partial<Activity>): Promise<Activity> {
-    // Set default image if none provided
-    if (data.imageUrl === "") {
-      data.imageUrl = "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3";
-    }
-
+  async updateActivity(id: number, updates: Partial<Activity>): Promise<Activity> {
     try {
-      const [activity] = await db
-        .update(activities)
-        .set(data)
-        .where(eq(activities.id, id))
-        .returning();
-      return activity;
+      // Ensure date is a proper Date object if it's included in updates
+      const updatesWithFormattedDate = { ...updates };
+
+      // Log for debugging
+      console.log('Updating activity with data:', updatesWithFormattedDate);
+
+      const result = await db.update(activities).set(updatesWithFormattedDate).where(eq(activities.id, id)).returning();
+      return result[0];
     } catch (error) {
       console.error('Error in updateActivity:', error);
       throw error;

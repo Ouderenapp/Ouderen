@@ -9,9 +9,11 @@ export const updateActivitySchema = z.object({
   name: z.string().min(3),
   description: z.string().min(10),
   imageUrl: z.string().url(),
-  date: z.string().refine(str => !isNaN(Date.parse(str)), {
-    message: "Invalid date format",
-  }),
+  date: z.string()
+    .refine(str => !isNaN(Date.parse(str)), {
+      message: "Invalid date format",
+    })
+    .transform(str => new Date(str)),
   capacity: z.number().int().positive(),
 });
 
