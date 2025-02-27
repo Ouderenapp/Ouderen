@@ -26,7 +26,9 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { LocationSelector } from "@/components/location-selector";
 
 const loginSchema = z.object({
-  username: z.string().min(1, "Gebruikersnaam is verplicht"),
+  username: z.string()
+    .email("Voer een geldig e-mailadres in")
+    .min(1, "E-mailadres is verplicht"),
   password: z.string().min(6, "Wachtwoord moet minimaal 6 tekens bevatten"),
 });
 
@@ -125,9 +127,9 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Gebruikersnaam</FormLabel>
+                            <FormLabel>E-mailadres</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input type="email" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -184,9 +186,12 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Gebruikersnaam</FormLabel>
+                            <FormLabel>E-mailadres</FormLabel>
+                            <FormDescription>
+                              Dit e-mailadres wordt gebruikt voor bevestigingen en herinneringen
+                            </FormDescription>
                             <FormControl>
-                              <Input {...field} />
+                              <Input type="email" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -214,7 +219,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Telefoonnummer</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input type="tel" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -299,9 +304,12 @@ export default function AuthPage() {
                         name="username"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Gebruikersnaam voor beheerder</FormLabel>
+                            <FormLabel>E-mailadres beheerder</FormLabel>
+                            <FormDescription>
+                              Dit e-mailadres wordt gebruikt voor bevestigingen en herinneringen
+                            </FormDescription>
                             <FormControl>
-                              <Input {...field} />
+                              <Input type="email" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -329,7 +337,7 @@ export default function AuthPage() {
                           <FormItem>
                             <FormLabel>Telefoonnummer</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input type="tel" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
