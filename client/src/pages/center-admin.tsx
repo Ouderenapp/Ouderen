@@ -22,13 +22,16 @@ export default function CenterAdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Fetch centers data
   const { data: centers, isLoading: isLoadingCenters } = useQuery<Center[]>({
     queryKey: ["/api/centers"],
     enabled: !!user?.id && user?.role === 'center_admin',
   });
 
+  // Find the center for this admin
   const center = centers?.find(c => c.adminId === user?.id);
 
+  // Fetch activities for this center
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: ["/api/activities", { centerId: center?.id }],
     enabled: !!center?.id,
@@ -100,7 +103,7 @@ export default function CenterAdminPage() {
     },
   });
 
-  if (isLoadingCenters) {
+  if (isLoadingCenters || isLoadingActivities) {
     return (
       <div>
         <h1 className="text-4xl font-bold">Buurthuis laden...</h1>
