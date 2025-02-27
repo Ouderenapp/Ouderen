@@ -1,6 +1,8 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+
+export const roleEnum = pgEnum('role', ['user', 'center_admin']);
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
@@ -11,6 +13,7 @@ export const users = pgTable("users", {
   village: text("village").notNull(),
   neighborhood: text("neighborhood").notNull(),
   anonymousParticipation: boolean("anonymous_participation").notNull().default(false),
+  role: roleEnum("role").notNull().default('user'),
 });
 
 export const centers = pgTable("centers", {
@@ -19,6 +22,8 @@ export const centers = pgTable("centers", {
   address: text("address").notNull(),
   description: text("description").notNull(),
   imageUrl: text("image_url").notNull(),
+  adminId: integer("admin_id").notNull(), // Reference to the user who manages this center
+  village: text("village").notNull(), // Add village to filter centers by location
 });
 
 export const activities = pgTable("activities", {
@@ -45,6 +50,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   village: true,
   neighborhood: true,
   anonymousParticipation: true,
+  role: true,
 });
 
 export const insertCenterSchema = createInsertSchema(centers);

@@ -14,14 +14,18 @@ export interface IStorage {
   updateUser(id: number, data: Partial<User>): Promise<User>;
 
   // Centers
-  getCenters(): Promise<Center[]>;
+  getCenters(village?: string): Promise<Center[]>; // Updated to filter by village
   getCenter(id: number): Promise<Center | undefined>;
   createCenter(center: InsertCenter): Promise<Center>;
+  updateCenter(id: number, data: Partial<Center>): Promise<Center>;
+  getCentersByAdmin(adminId: number): Promise<Center[]>;
 
   // Activities 
   getActivities(centerId?: number): Promise<Activity[]>;
   getActivity(id: number): Promise<Activity | undefined>;
   createActivity(activity: InsertActivity): Promise<Activity>;
+  updateActivity(id: number, data: Partial<Activity>): Promise<Activity>;
+  deleteActivity(id: number): Promise<void>;
 
   // Registrations
   getRegistrations(activityId: number): Promise<Registration[]>;
@@ -46,7 +50,10 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
-  async getCenters(): Promise<Center[]> {
+  async getCenters(village?: string): Promise<Center[]> {
+    if (village) {
+      return await db.select().from(centers).where(eq(centers.village, village));
+    }
     return await db.select().from(centers);
   }
 
@@ -58,6 +65,19 @@ export class DatabaseStorage implements IStorage {
   async createCenter(insertCenter: InsertCenter): Promise<Center> {
     const [center] = await db.insert(centers).values(insertCenter).returning();
     return center;
+  }
+
+  async updateCenter(id: number, data: Partial<Center>): Promise<Center> {
+    const [center] = await db
+      .update(centers)
+      .set(data)
+      .where(eq(centers.id, id))
+      .returning();
+    return center;
+  }
+
+  async getCentersByAdmin(adminId: number): Promise<Center[]> {
+    return await db.select().from(centers).where(eq(centers.adminId, adminId));
   }
 
   async getActivities(centerId?: number): Promise<Activity[]> {
@@ -75,6 +95,19 @@ export class DatabaseStorage implements IStorage {
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
     const [activity] = await db.insert(activities).values(insertActivity).returning();
     return activity;
+  }
+
+  async updateActivity(id: number, data: Partial<Activity>): Promise<Activity> {
+    const [activity] = await db
+      .update(activities)
+      .set(data)
+      .where(eq(activities.id, id))
+      .returning();
+    return activity;
+  }
+
+  async deleteActivity(id: number): Promise<void> {
+    await db.delete(activities).where(eq(activities.id, id));
   }
 
   async getRegistrations(activityId: number): Promise<Registration[]> {

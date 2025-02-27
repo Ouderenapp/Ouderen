@@ -35,6 +35,7 @@ const registerSchema = loginSchema.extend({
   village: z.string().min(1, "Dorp is verplicht"),
   neighborhood: z.string().min(1, "Wijk is verplicht"),
   anonymousParticipation: z.boolean().default(false),
+  role: z.enum(['user', 'center_admin']),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -43,7 +44,7 @@ type RegisterForm = z.infer<typeof registerSchema>;
 export default function AuthPage() {
   const [, setLocation] = useLocation();
   const { user, login, register } = useAuth();
-  const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const [activeTab, setActiveTab] = useState<"login" | "register" | "register_center">("login");
 
   const loginForm = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -63,6 +64,7 @@ export default function AuthPage() {
       village: "",
       neighborhood: "",
       anonymousParticipation: false,
+      role: 'user',
     },
   });
 
@@ -97,16 +99,17 @@ export default function AuthPage() {
           <div>
             <h1 className="text-4xl font-bold">Welkom bij het Activiteitencentrum</h1>
             <p className="mt-2 text-xl text-muted-foreground">
-              Meld u aan om deel te nemen aan activiteiten en ontmoet andere deelnemers
+              Meld u aan om deel te nemen aan activiteiten of beheer uw buurthuis
             </p>
           </div>
 
           <Card>
             <CardContent className="pt-6">
               <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-                <TabsList className="grid w-full grid-cols-2">
+                <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="login">Inloggen</TabsTrigger>
                   <TabsTrigger value="register">Registreren</TabsTrigger>
+                  <TabsTrigger value="register_center">Buurthuis Registreren</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="login">
@@ -157,7 +160,7 @@ export default function AuthPage() {
                 <TabsContent value="register">
                   <Form {...registerForm}>
                     <form
-                      onSubmit={registerForm.handleSubmit(onRegister)}
+                      onSubmit={registerForm.handleSubmit((data) => onRegister({ ...data, role: 'user' }))}
                       className="space-y-4"
                     >
                       <FormField
@@ -271,6 +274,107 @@ export default function AuthPage() {
                         disabled={registerForm.formState.isSubmitting}
                       >
                         {registerForm.formState.isSubmitting ? "Bezig..." : "Registreren"}
+                      </Button>
+                    </form>
+                  </Form>
+                </TabsContent>
+
+                <TabsContent value="register_center">
+                  <Form {...registerForm}>
+                    <form
+                      onSubmit={registerForm.handleSubmit((data) => onRegister({ ...data, role: 'center_admin' }))}
+                      className="space-y-4"
+                    >
+                      <FormField
+                        control={registerForm.control}
+                        name="displayName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Naam Buurthuis</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Gebruikersnaam voor beheerder</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Wachtwoord</FormLabel>
+                            <FormControl>
+                              <Input type="password" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Telefoonnummer</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="village"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Dorp</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={registerForm.control}
+                        name="neighborhood"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Wijk</FormLabel>
+                            <FormControl>
+                              <Input {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <Button
+                        type="submit"
+                        className="w-full"
+                        disabled={registerForm.formState.isSubmitting}
+                      >
+                        {registerForm.formState.isSubmitting ? "Bezig..." : "Buurthuis Registreren"}
                       </Button>
                     </form>
                   </Form>
