@@ -22,14 +22,14 @@ export default function CenterAdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  const { data: centers } = useQuery<Center[]>({
+  const { data: centers, isLoading: isLoadingCenters } = useQuery<Center[]>({
     queryKey: ["/api/centers"],
-    enabled: user?.role === 'center_admin',
+    enabled: !!user?.id && user?.role === 'center_admin',
   });
 
   const center = centers?.find(c => c.adminId === user?.id);
 
-  const { data: activities } = useQuery<Activity[]>({
+  const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: ["/api/activities", { centerId: center?.id }],
     enabled: !!center?.id,
   });
@@ -100,6 +100,17 @@ export default function CenterAdminPage() {
     },
   });
 
+  if (isLoadingCenters) {
+    return (
+      <div>
+        <h1 className="text-4xl font-bold">Buurthuis laden...</h1>
+        <p className="mt-2 text-xl text-muted-foreground">
+          Even geduld alstublieft.
+        </p>
+      </div>
+    );
+  }
+
   if (user?.role !== 'center_admin') {
     return (
       <div>
@@ -116,7 +127,7 @@ export default function CenterAdminPage() {
       <div>
         <h1 className="text-4xl font-bold">Buurthuis niet gevonden</h1>
         <p className="mt-2 text-xl text-muted-foreground">
-          Er is geen buurthuis gekoppeld aan uw account.
+          Er is geen buurthuis gekoppeld aan uw account. Neem contact op met de beheerder.
         </p>
       </div>
     );

@@ -271,7 +271,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Wijzig alleen het relevante deel van de /api/register route
+  // Update the register route
   app.post("/api/register", async (req, res, next) => {
     try {
       const existingUser = await storage.getUserByUsername(req.body.username);
@@ -286,7 +286,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Als dit een buurthuis beheerder is, maak dan ook een buurthuis aan
       if (user.role === 'center_admin') {
-        await storage.createCenter({
+        const center = await storage.createCenter({
           name: user.displayName,
           address: `${user.neighborhood}, ${user.village}`,
           description: `Buurthuis ${user.displayName} in ${user.village}`,
@@ -294,6 +294,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           adminId: user.id,
           village: user.village
         });
+
+        // Log het aangemaakte centrum voor debugging
+        console.log('Created center:', center);
       }
 
       req.login(user, (err) => {
@@ -301,6 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         res.status(201).json(user);
       });
     } catch (err) {
+      console.error('Error in register route:', err);
       next(err);
     }
   });
