@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, insertCenterSchema, type User } from "@shared/schema";
 import { hashPassword } from "./auth";
 import { sendWelcomeEmail, sendActivityRegistrationEmail } from "./email";
+import { createPaymentIntent, handleWebhook } from "./stripe";
+import express from "express";
 
 // Middleware om te controleren of een gebruiker een center admin is
 function isCenterAdmin(req: Request, res: Response, next: NextFunction) {
@@ -610,7 +612,91 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
 
-  // Add to the existing routes file, after the registrations routes
+  // Add payment routes
+  app.post("/api/activities/:id/payment", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "U moet eerst inloggen" });
+      }
+
+      const activityId = parseInt(req.params.id);
+      if (isNaN(activityId)) {
+        return res.status(400).json({ message: "Ongeldige activiteit ID" });
+      }
+
+      const activity = await storage.getActivity(activityId);
+      if (!activity) {
+        return res.status(404).json({ message: "Activiteit niet gevonden" });
+      }
+
+      if (!activity.price) {
+        return res.status(400).json({ message: "Deze activiteit is gratis" });
+      }
+
+      // Create Stripe PaymentIntent
+      const paymentIntent = await createPaymentIntent(activity.price, {
+        activityId: activity.id.toString(),
+        userId: req.user.id.toString()
+      });
+
+      // Create payment record
+      const payment = await storage.createPayment({
+        userId: req.user.id,
+        activityId: activity.id,
+        amount: activity.price,
+        status: 'pending',
+        stripePaymentIntentId: paymentIntent.id
+      });
+
+      res.json({
+        clientSecret: paymentIntent.client_secret,
+        paymentId: payment.id
+      });
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden bij het verwerken van de betaling" });
+    }
+  });
+
+  // Stripe webhook handler
+  app.post("/api/webhook/stripe", express.raw({ type: 'application/json' }), async (req, res) => {
+    try {
+      const sig = req.headers['stripe-signature'];
+      if (!sig) {
+        return res.status(400).json({ message: "Geen Stripe signature gevonden" });
+      }
+
+      const event = await handleWebhook(sig, req.body);
+
+      // Handle the event
+      switch (event.type) {
+        case 'payment_intent.succeeded':
+          const paymentIntent = event.data.object;
+          const { activityId, userId } = paymentIntent.metadata;
+
+          // Update payment status
+          await storage.updatePaymentStatus(paymentIntent.id, 'completed');
+
+          // Create registration
+          await storage.createRegistration({
+            userId: parseInt(userId),
+            activityId: parseInt(activityId)
+          });
+
+          break;
+        case 'payment_intent.payment_failed':
+          await storage.updatePaymentStatus(event.data.object.id, 'failed');
+          break;
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Webhook error:', error);
+      res.status(400).json({ message: "Webhook error" });
+    }
+  });
+
+  // New route to get all registrations for a center admin
   app.get("/api/activities/registrations", isCenterAdmin, async (req, res) => {
     try {
       // Haal eerst het buurthuis op van de ingelogde admin
