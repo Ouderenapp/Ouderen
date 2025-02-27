@@ -147,9 +147,14 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createActivity(insertActivity: InsertActivity): Promise<Activity> {
+  async createActivity(data: InsertActivity): Promise<Activity> {
+    // Set default image if none provided
+    if (data.imageUrl === "") {
+      data.imageUrl = "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3";
+    }
+
     try {
-      const [activity] = await db.insert(activities).values(insertActivity).returning();
+      const [activity] = await db.insert(activities).values(data).returning();
       return activity;
     } catch (error) {
       console.error('Error in createActivity:', error);
@@ -158,6 +163,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateActivity(id: number, data: Partial<Activity>): Promise<Activity> {
+    // Set default image if none provided
+    if (data.imageUrl === "") {
+      data.imageUrl = "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3";
+    }
+
     try {
       const [activity] = await db
         .update(activities)
