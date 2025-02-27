@@ -3,7 +3,6 @@ import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const roleEnum = pgEnum('role', ['user', 'center_admin']);
-export const paymentStatusEnum = pgEnum('payment_status', ['pending', 'completed', 'failed', 'refunded']);
 
 // Create schema for updating activities
 export const updateActivitySchema = z.object({
@@ -18,7 +17,6 @@ export const updateActivitySchema = z.object({
   capacity: z.number().int().positive(),
   materialsNeeded: z.string().optional(),
   facilitiesAvailable: z.string().optional(),
-  price: z.number().min(0).optional(), // Add price field
 });
 
 export const users = pgTable("users", {
@@ -53,26 +51,12 @@ export const activities = pgTable("activities", {
   capacity: integer("capacity").notNull(),
   materialsNeeded: text("materials_needed"),
   facilitiesAvailable: text("facilities_available"),
-  price: integer("price"), // Add price in cents
-});
-
-// Add new payments table
-export const payments = pgTable("payments", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  activityId: integer("activity_id").notNull(),
-  amount: integer("amount").notNull(), // Amount in cents
-  status: paymentStatusEnum("status").notNull().default('pending'),
-  stripePaymentIntentId: text("stripe_payment_intent_id").notNull(),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const registrations = pgTable("registrations", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   activityId: integer("activity_id").notNull(),
-  paymentId: integer("payment_id"), // Add reference to payment
 });
 
 export const waitlist = pgTable("waitlist", {
@@ -125,10 +109,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertCenterSchema = createInsertSchema(centers);
 export const insertActivitySchema = createInsertSchema(activities).extend({
   date: z.string().transform((str) => new Date(str)),
-  price: z.number().min(0).optional(),
 });
 export const insertRegistrationSchema = createInsertSchema(registrations);
-export const insertPaymentSchema = createInsertSchema(payments);
 
 // Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -139,7 +121,6 @@ export type InsertReminder = z.infer<typeof insertReminderSchema>;
 export type InsertWaitlist = z.infer<typeof insertWaitlistSchema>;
 export type InsertCarpool = z.infer<typeof insertCarpoolSchema>;
 export type InsertCarpoolPassenger = z.infer<typeof insertCarpoolPassengerSchema>;
-export type InsertPayment = z.infer<typeof insertPaymentSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Center = typeof centers.$inferSelect;
@@ -149,4 +130,3 @@ export type Reminder = typeof reminders.$inferSelect;
 export type Waitlist = typeof waitlist.$inferSelect;
 export type Carpool = typeof carpools.$inferSelect;
 export type CarpoolPassenger = typeof carpoolPassengers.$inferSelect;
-export type Payment = typeof payments.$inferSelect;

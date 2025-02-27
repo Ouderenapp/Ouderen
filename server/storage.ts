@@ -1,8 +1,8 @@
 import {
-  users, centers, activities, registrations, reminders, waitlist, carpools, carpoolPassengers, payments,
-  type User, type Center, type Activity, type Registration, type Reminder, type Waitlist, type Carpool, type CarpoolPassenger, type Payment,
+  users, centers, activities, registrations, reminders, waitlist, carpools, carpoolPassengers,
+  type User, type Center, type Activity, type Registration, type Reminder, type Waitlist, type Carpool, type CarpoolPassenger,
   type InsertUser, type InsertCenter, type InsertActivity, type InsertRegistration, type InsertReminder, type InsertWaitlist,
-  type InsertCarpool, type InsertCarpoolPassenger, type InsertPayment
+  type InsertCarpool, type InsertCarpoolPassenger
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -57,11 +57,6 @@ export interface IStorage {
   addPassenger(passenger: InsertCarpoolPassenger): Promise<CarpoolPassenger>;
   removePassenger(carpoolId: number, passengerId: number): Promise<void>;
   getCarpoolPassengers(carpoolId: number): Promise<User[]>;
-
-  // Payment methods
-  createPayment(payment: InsertPayment): Promise<Payment>;
-  updatePaymentStatus(stripePaymentIntentId: string, status: 'completed' | 'failed' | 'refunded'): Promise<void>;
-  getPaymentByStripeId(stripePaymentIntentId: string): Promise<Payment | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -460,45 +455,6 @@ export class DatabaseStorage implements IStorage {
       return users.filter((user): user is User => user !== undefined);
     } catch (error) {
       console.error('Error in getCarpoolPassengers:', error);
-      throw error;
-    }
-  }
-
-  // Payment methods
-  async createPayment(payment: InsertPayment): Promise<Payment> {
-    try {
-      const [newPayment] = await db.insert(payments).values(payment).returning();
-      return newPayment;
-    } catch (error) {
-      console.error('Error in createPayment:', error);
-      throw error;
-    }
-  }
-
-  async updatePaymentStatus(stripePaymentIntentId: string, status: 'completed' | 'failed' | 'refunded'): Promise<void> {
-    try {
-      await db
-        .update(payments)
-        .set({ 
-          status,
-          updatedAt: new Date()
-        })
-        .where(eq(payments.stripePaymentIntentId, stripePaymentIntentId));
-    } catch (error) {
-      console.error('Error in updatePaymentStatus:', error);
-      throw error;
-    }
-  }
-
-  async getPaymentByStripeId(stripePaymentIntentId: string): Promise<Payment | undefined> {
-    try {
-      const [payment] = await db
-        .select()
-        .from(payments)
-        .where(eq(payments.stripePaymentIntentId, stripePaymentIntentId));
-      return payment;
-    } catch (error) {
-      console.error('Error in getPaymentByStripeId:', error);
       throw error;
     }
   }
