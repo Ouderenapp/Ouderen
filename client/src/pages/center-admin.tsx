@@ -34,13 +34,45 @@ export default function CenterAdminPage() {
     enabled: !!center?.id,
   });
 
-  const form = useForm({
+  // Form for updating center details
+  const centerForm = useForm({
+    defaultValues: {
+      name: center?.name || "",
+      address: center?.address || "",
+      description: center?.description || "",
+      imageUrl: center?.imageUrl || "",
+    },
+  });
+
+  const updateCenterMutation = useMutation({
+    mutationFn: async (data: Partial<Center>) => {
+      const response = await apiRequest("PUT", `/api/centers/${center?.id}`, data);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/centers"] });
+      toast({
+        title: "Buurthuis bijgewerkt",
+        description: "De wijzigingen zijn succesvol opgeslagen.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Fout bij bijwerken",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Form for creating new activities
+  const activityForm = useForm({
     resolver: zodResolver(insertActivitySchema),
     defaultValues: {
       name: "",
       description: "",
       imageUrl: "",
-      date: new Date().toISOString(),
+      date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
       capacity: 10,
       centerId: center?.id,
     },
@@ -53,7 +85,7 @@ export default function CenterAdminPage() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/activities"] });
-      form.reset();
+      activityForm.reset();
       toast({
         title: "Activiteit aangemaakt",
         description: "De activiteit is succesvol aangemaakt.",
@@ -93,21 +125,24 @@ export default function CenterAdminPage() {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-bold">{center.name}</h1>
-        <p className="mt-2 text-xl text-muted-foreground">{center.address}</p>
+        <h1 className="text-4xl font-bold">Beheer Buurthuis</h1>
+        <p className="mt-2 text-xl text-muted-foreground">
+          Beheer de informatie en activiteiten van {center.name}
+        </p>
       </div>
 
+      {/* Buurthuis informatie bewerken */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Nieuwe Activiteit</h2>
-        <Form {...form}>
+        <h2 className="text-2xl font-bold">Buurthuis Informatie</h2>
+        <Form {...centerForm}>
           <form
-            onSubmit={form.handleSubmit((data) =>
-              createActivityMutation.mutate({ ...data, centerId: center.id })
+            onSubmit={centerForm.handleSubmit((data) =>
+              updateCenterMutation.mutate(data)
             )}
             className="space-y-4"
           >
             <FormField
-              control={form.control}
+              control={centerForm.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
@@ -121,7 +156,21 @@ export default function CenterAdminPage() {
             />
 
             <FormField
-              control={form.control}
+              control={centerForm.control}
+              name="address"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Adres</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={centerForm.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
@@ -135,7 +184,71 @@ export default function CenterAdminPage() {
             />
 
             <FormField
-              control={form.control}
+              control={centerForm.control}
+              name="imageUrl"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Afbeelding URL</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              disabled={updateCenterMutation.isPending}
+            >
+              {updateCenterMutation.isPending
+                ? "Bezig met opslaan..."
+                : "Wijzigingen opslaan"}
+            </Button>
+          </form>
+        </Form>
+      </div>
+
+      {/* Nieuwe activiteit aanmaken */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Nieuwe Activiteit</h2>
+        <Form {...activityForm}>
+          <form
+            onSubmit={activityForm.handleSubmit((data) =>
+              createActivityMutation.mutate({ ...data, centerId: center.id })
+            )}
+            className="space-y-4"
+          >
+            <FormField
+              control={activityForm.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Naam</FormLabel>
+                  <FormControl>
+                    <Input {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={activityForm.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Beschrijving</FormLabel>
+                  <FormControl>
+                    <Textarea {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={activityForm.control}
               name="imageUrl"
               render={({ field }) => (
                 <FormItem>
@@ -149,7 +262,7 @@ export default function CenterAdminPage() {
             />
 
             <FormField
-              control={form.control}
+              control={activityForm.control}
               name="date"
               render={({ field }) => (
                 <FormItem>
@@ -163,7 +276,7 @@ export default function CenterAdminPage() {
             />
 
             <FormField
-              control={form.control}
+              control={activityForm.control}
               name="capacity"
               render={({ field }) => (
                 <FormItem>
@@ -194,6 +307,7 @@ export default function CenterAdminPage() {
         </Form>
       </div>
 
+      {/* Bestaande activiteiten */}
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Huidige Activiteiten</h2>
         <div className="grid gap-6 md:grid-cols-2">

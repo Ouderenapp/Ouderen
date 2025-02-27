@@ -18,7 +18,9 @@ export default function Navigation() {
 
   const links = [
     { href: "/", label: "Activiteitencentra", icon: Building2 },
-    ...(user ? [{ href: "/profile", label: "Mijn Profiel", icon: User }] : []),
+    // Only show profile for regular users
+    ...(user && user.role === 'user' ? [{ href: "/profile", label: "Mijn Profiel", icon: User }] : []),
+    // Show admin page for center admins
     ...(user?.role === 'center_admin' ? [{ href: "/center-admin", label: "Beheer Buurthuis", icon: Settings }] : []),
   ];
 
