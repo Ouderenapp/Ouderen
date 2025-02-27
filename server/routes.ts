@@ -12,6 +12,14 @@ function isCenterAdmin(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
+// Add error handling helper
+function handleError(error: any, res: Response) {
+  console.error('API Error:', error);
+  const status = error.status || error.statusCode || 500;
+  const message = error.message || "Er is een fout opgetreden";
+  res.status(status).json({ message });
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
@@ -113,30 +121,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const centerId = req.query.centerId ? parseInt(req.query.centerId as string) : undefined;
       console.log('Requested activities for centerId:', centerId);
 
-      // Als het een buurthuis admin is, alleen activiteiten van eigen buurthuis tonen
-      if (req.user?.role === 'center_admin') {
-        const centers = await storage.getCentersByAdmin(req.user.id);
-        if (centers.length > 0) {
-          const activities = await storage.getActivities(centers[0].id);
-          console.log('Returning admin activities:', activities);
-          return res.json(activities);
-        }
+      if (!centerId || isNaN(centerId)) {
+        console.log('No valid centerId provided, returning empty list');
         return res.json([]);
       }
 
-      // Voor normale gebruikers
-      if (centerId) {
-        // Haal activiteiten op voor het specifieke buurthuis
-        const activities = await storage.getActivities(centerId);
-        console.log('Returning activities for center:', activities);
-        return res.json(activities);
-      }
-
-      // Als er geen centerId is opgegeven, stuur een lege lijst terug
-      return res.json([]);
+      // Haal activiteiten op voor het opgegeven buurthuis
+      const activities = await storage.getActivities(centerId);
+      console.log('Returning activities for center:', activities);
+      return res.json(activities);
     } catch (error) {
-      console.error('Error getting activities:', error);
-      res.status(500).json({ message: "Er is een fout opgetreden" });
+      handleError(error, res);
     }
   });
 

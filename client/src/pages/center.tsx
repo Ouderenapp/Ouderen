@@ -7,6 +7,8 @@ export default function CenterPage() {
   const { id } = useParams();
   const centerId = parseInt(id || "0");
 
+  console.log('Rendering CenterPage with centerId:', centerId); // Debug log
+
   const { data: center, isLoading: isLoadingCenter } = useQuery<Center>({
     queryKey: [`/api/centers/${centerId}`],
   });
@@ -31,6 +33,8 @@ export default function CenterPage() {
   }
 
   if (!center) return null;
+
+  console.log('Activities loaded:', activities); // Debug log
 
   return (
     <div className="space-y-8">
