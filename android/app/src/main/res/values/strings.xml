@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Buurtactiviteiten</string>
+    <string name="title_activity_main">Buurtactiviteiten</string>
+    <string name="package_name">nl.buurtactiviteiten.app</string>
+    <string name="custom_url_scheme">nl.buurtactiviteiten.app</string>
+</resources>
