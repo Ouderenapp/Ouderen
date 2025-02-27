@@ -1,7 +1,7 @@
 import {
-  users, centers, activities, registrations,
-  type User, type Center, type Activity, type Registration,
-  type InsertUser, type InsertCenter, type InsertActivity, type InsertRegistration
+  users, centers, activities, registrations, reminders,
+  type User, type Center, type Activity, type Registration, type Reminder,
+  type InsertUser, type InsertCenter, type InsertActivity, type InsertRegistration, type InsertReminder
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -32,6 +32,13 @@ export interface IStorage {
   getRegistrationsByUser(userId: number): Promise<Registration[]>;
   createRegistration(registration: InsertRegistration): Promise<Registration>;
   deleteRegistration(userId: number, activityId: number): Promise<void>;
+  
+  // Reminders
+  getRemindersByUser(userId: number): Promise<Reminder[]>;
+  createReminder(reminder: InsertReminder): Promise<Reminder>;
+  updateReminder(id: number, data: Partial<Reminder>): Promise<Reminder>;
+  deleteReminder(id: number): Promise<void>;
+  getUpcomingReminders(userId: number): Promise<Reminder[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -245,6 +252,67 @@ export class DatabaseStorage implements IStorage {
       return user;
     } catch (error) {
       console.error('Error in updateUser:', error);
+      throw error;
+    }
+  }
+
+  // Reminder methods
+  async getRemindersByUser(userId: number): Promise<Reminder[]> {
+    try {
+      return await db.select().from(reminders).where(eq(reminders.userId, userId));
+    } catch (error) {
+      console.error('Error in getRemindersByUser:', error);
+      throw error;
+    }
+  }
+
+  async createReminder(reminder: InsertReminder): Promise<Reminder> {
+    try {
+      const [newReminder] = await db.insert(reminders).values(reminder).returning();
+      return newReminder;
+    } catch (error) {
+      console.error('Error in createReminder:', error);
+      throw error;
+    }
+  }
+
+  async updateReminder(id: number, data: Partial<Reminder>): Promise<Reminder> {
+    try {
+      const [updatedReminder] = await db
+        .update(reminders)
+        .set(data)
+        .where(eq(reminders.id, id))
+        .returning();
+      return updatedReminder;
+    } catch (error) {
+      console.error('Error in updateReminder:', error);
+      throw error;
+    }
+  }
+
+  async deleteReminder(id: number): Promise<void> {
+    try {
+      await db.delete(reminders).where(eq(reminders.id, id));
+    } catch (error) {
+      console.error('Error in deleteReminder:', error);
+      throw error;
+    }
+  }
+
+  async getUpcomingReminders(userId: number): Promise<Reminder[]> {
+    try {
+      const now = new Date();
+      return await db
+        .select()
+        .from(reminders)
+        .where(
+          and(
+            eq(reminders.userId, userId),
+            eq(reminders.isRead, false)
+          )
+        );
+    } catch (error) {
+      console.error('Error in getUpcomingReminders:', error);
       throw error;
     }
   }

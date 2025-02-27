@@ -55,6 +55,20 @@ export const registrations = pgTable("registrations", {
   activityId: integer("activity_id").notNull(),
 });
 
+export const reminders = pgTable("reminders", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  activityId: integer("activity_id").notNull(),
+  reminderDate: timestamp("reminder_date").notNull(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").notNull().default(false),
+});
+
+export const insertReminderSchema = createInsertSchema(reminders);
+export type InsertReminder = z.infer<typeof insertReminderSchema>;
+export type Reminder = typeof reminders.$inferSelect;
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,

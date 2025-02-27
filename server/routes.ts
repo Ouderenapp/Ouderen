@@ -254,6 +254,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const registration = await storage.createRegistration(result.data);
+    
+    // Create a reminder for this activity
+    const activityDate = new Date(activity.date);
+    const dayBeforeActivity = new Date(activityDate);
+    dayBeforeActivity.setDate(dayBeforeActivity.getDate() - 1);
+    
+    await storage.createReminder({
+      userId: req.body.userId,
+      activityId,
+      reminderDate: dayBeforeActivity,
+      title: `Herinnering: ${activity.name}`,
+      message: `Morgen begint de activiteit "${activity.name}". Vergeet niet om hierbij aanwezig te zijn!`,
+      isRead: false
+    });
+    
     res.status(201).json(registration);
   });
 
@@ -262,6 +277,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userId = req.body.userId;
 
     await storage.deleteRegistration(userId, activityId);
+    
+    // Get all reminders for this user and activity
+    const userReminders = await storage.getRemindersByUser(userId);
+    const activityReminders = userReminders.filter(r => r.activityId === activityId);
+    
+    // Delete all reminders for this activity
+    for (const reminder of activityReminders) {
+      await storage.deleteReminder(reminder.id);
+    }
+    
     res.status(204).send();
   });
 
@@ -322,6 +347,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(user);
     } catch (err) {
       next(err);
+    }
+  });
+  
+  // Reminder routes
+  app.get("/api/users/:id/reminders", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
+      return res.status(401).json({ message: "Niet geautoriseerd" });
+    }
+
+    const reminders = await storage.getRemindersByUser(parseInt(req.params.id));
+    res.json(reminders);
+  });
+  
+  app.get("/api/users/:id/upcoming-reminders", async (req, res) => {
+    if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
+      return res.status(401).json({ message: "Niet geautoriseerd" });
+    }
+
+    const reminders = await storage.getUpcomingReminders(parseInt(req.params.id));
+    res.json(reminders);
+  });
+  
+  app.patch("/api/reminders/:id", async (req, res) => {
+    try {
+      const reminderId = parseInt(req.params.id);
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "Niet geautoriseerd" });
+      }
+      
+      const updated = await storage.updateReminder(reminderId, req.body);
+      res.json(updated);
+    } catch (error) {
+      console.error('Error updating reminder:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden" });
     }
   });
 

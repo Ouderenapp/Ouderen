@@ -11,6 +11,7 @@ import { Building2, MapPin, Edit, Save, X } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RemindersPanel } from "@/components/reminders-panel";
 
 export default function Profile() {
   const { user } = useAuth();
@@ -246,22 +247,29 @@ export default function Profile() {
         </CardContent>
       </Card>
 
-      <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Mijn Activiteiten</h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          {myActivities?.map((activity) => (
-            <ActivityCard
-              key={activity.id}
-              activity={activity}
-              isRegistered={true}
-              onRegister={() => handleUnregister(activity.id)}
-            />
-          ))}
-          {(!myActivities || myActivities.length === 0) && (
-            <p className="col-span-2 text-center text-lg text-muted-foreground">
-              U bent nog niet aangemeld voor activiteiten
-            </p>
-          )}
+      <div className="space-y-8">
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Herinneringen</h2>
+          {user && <RemindersPanel userId={user.id} />}
+        </div>
+
+        <div className="space-y-4">
+          <h2 className="text-2xl font-bold">Mijn Activiteiten</h2>
+          <div className="grid gap-6 md:grid-cols-2">
+            {myActivities?.map((activity) => (
+              <ActivityCard
+                key={activity.id}
+                activity={activity}
+                isRegistered={true}
+                onRegister={() => handleUnregister(activity.id)}
+              />
+            ))}
+            {(!myActivities || myActivities.length === 0) && (
+              <p className="col-span-2 text-center text-lg text-muted-foreground">
+                U bent nog niet aangemeld voor activiteiten
+              </p>
+            )}
+          </div>
         </div>
       </div>
     </div>
