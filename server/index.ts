@@ -40,13 +40,16 @@ app.use((req, res, next) => {
 (async () => {
   try {
     log("Starting server setup...");
+    console.log("Server initialization beginning...");
 
     // Set up authentication before routes
     setupAuth(app);
     log("Authentication setup complete");
+    console.log("Authentication configured successfully");
 
     const server = await registerRoutes(app);
     log("Routes registered successfully");
+    console.log("API routes registered and configured");
 
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       console.error("Server error:", err);
@@ -59,6 +62,7 @@ app.use((req, res, next) => {
     if (app.get("env") === "development") {
       await setupVite(app, server);
       log("Vite setup complete");
+      console.log("Development server (Vite) configured");
     } else {
       serveStatic(app);
       log("Static serving setup complete");
@@ -70,6 +74,7 @@ app.use((req, res, next) => {
       host: "0.0.0.0",
       reusePort: true,
     }, () => {
+      console.log(`Server started successfully on http://0.0.0.0:${port}`);
       log(`Server started successfully, serving on port ${port}`);
     });
   } catch (error) {

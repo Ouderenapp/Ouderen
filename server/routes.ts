@@ -111,24 +111,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/activities", async (req, res) => {
     try {
       const centerId = req.query.centerId ? parseInt(req.query.centerId as string) : undefined;
+      console.log('Requested activities for centerId:', centerId);
 
       // Als het een buurthuis admin is, alleen activiteiten van eigen buurthuis tonen
       if (req.user?.role === 'center_admin') {
         const centers = await storage.getCentersByAdmin(req.user.id);
         if (centers.length > 0) {
           const activities = await storage.getActivities(centers[0].id);
+          console.log('Returning admin activities:', activities);
           return res.json(activities);
         }
         return res.json([]);
       }
 
-      // Voor normale gebruikers
+      // Voor normale gebruikers, haal activiteiten op voor specifiek buurthuis
       if (centerId) {
         const activities = await storage.getActivities(centerId);
+        console.log('Returning activities for center:', activities);
         return res.json(activities);
       }
 
-      // Als er geen centerId is opgegeven, stuur een lege lijst terug
+      // Als er geen centerId is opgegeven, return een lege lijst
       return res.json([]);
 
     } catch (error) {
