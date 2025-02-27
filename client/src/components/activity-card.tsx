@@ -84,3 +84,56 @@ export function ActivityCard({ activity, onRegister, isRegistered, onEdit }: Act
     </Card>
   );
 }
+import React from "react";
+import { useAuth } from "@/hooks/use-auth";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Activity } from "@shared/schema";
+import { Calendar, Users } from "lucide-react";
+import { format } from "date-fns";
+import { Link } from "wouter";
+
+interface ActivityCardProps {
+  activity: Activity;
+  onEditClick?: (activity: Activity) => void;
+}
+
+export function ActivityCard({ activity, onEditClick }: ActivityCardProps) {
+  const { user } = useAuth();
+  const isAdmin = user && user.role === "center_admin";
+  
+  return (
+    <Card className="overflow-hidden">
+      <div className="aspect-video w-full overflow-hidden">
+        <img 
+          src={activity.imageUrl} 
+          alt={activity.name} 
+          className="h-full w-full object-cover" 
+        />
+      </div>
+      <CardContent className="p-4">
+        <h3 className="mb-2 text-xl font-bold">{activity.name}</h3>
+        <p className="text-muted-foreground">{activity.description}</p>
+        <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4" />
+          <span>{format(new Date(activity.date), "PPP p")}</span>
+        </div>
+        <div className="mt-2 flex items-center gap-2 text-sm text-muted-foreground">
+          <Users className="h-4 w-4" />
+          <span>Max capacity: {activity.capacity}</span>
+        </div>
+      </CardContent>
+      <CardFooter className="p-4 pt-0">
+        {isAdmin && onEditClick ? (
+          <Button variant="outline" onClick={() => onEditClick(activity)}>
+            Edit Activity
+          </Button>
+        ) : (
+          <Button asChild>
+            <Link href={`/activity/${activity.id}`}>View Details</Link>
+          </Button>
+        )}
+      </CardFooter>
+    </Card>
+  );
+}

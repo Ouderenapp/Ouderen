@@ -4,6 +4,17 @@ import { z } from "zod";
 
 export const roleEnum = pgEnum('role', ['user', 'center_admin']);
 
+// Create schema for updating activities
+export const updateActivitySchema = z.object({
+  name: z.string().min(3),
+  description: z.string().min(10),
+  imageUrl: z.string().url(),
+  date: z.string().refine(str => !isNaN(Date.parse(str)), {
+    message: "Invalid date format",
+  }),
+  capacity: z.number().int().positive(),
+});
+
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
