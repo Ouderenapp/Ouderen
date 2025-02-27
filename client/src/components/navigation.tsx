@@ -32,7 +32,81 @@ export default function Navigation() {
   return (
     <nav className="border-b bg-white">
       <div className="container mx-auto px-4">
-        <div className="flex h-16 items-center justify-between">
+        {/* Mobiele navigatie */}
+        <div className="lg:hidden flex flex-col py-4">
+          <div className="flex items-center justify-between mb-4">
+            <Link href="/">
+              <a className="text-xl font-bold">Buurtactiviteiten</a>
+            </Link>
+            <div className="flex items-center space-x-2">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={toggleAccessibilityMode}
+                      aria-label={theme.isAccessibilityMode ? "Toegankelijkheidsmodus uitschakelen" : "Toegankelijkheidsmodus inschakelen"}
+                    >
+                      <Eye className={cn(
+                        "h-5 w-5",
+                        theme.isAccessibilityMode && "text-primary"
+                      )} />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>
+                      {theme.isAccessibilityMode
+                        ? "Toegankelijkheidsmodus uitschakelen"
+                        : "Toegankelijkheidsmodus inschakelen"}
+                    </p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              {user ? (
+                <Button
+                  variant="outline"
+                  onClick={() => logout()}
+                  className="w-full"
+                  data-accessibility-mode={theme.isAccessibilityMode}
+                >
+                  Uitloggen
+                </Button>
+              ) : (
+                <Link href="/auth">
+                  <Button
+                    className="w-full"
+                    data-accessibility-mode={theme.isAccessibilityMode}
+                  >
+                    Inloggen
+                  </Button>
+                </Link>
+              )}
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {links.map(({ href, label, icon: Icon }) => (
+              <Link key={href} href={href}>
+                <a
+                  className={cn(
+                    "flex items-center space-x-2 p-3 rounded-lg transition-colors",
+                    location === href
+                      ? "bg-primary text-primary-foreground"
+                      : "hover:bg-muted"
+                  )}
+                  data-accessibility-mode={theme.isAccessibilityMode}
+                >
+                  <Icon className="h-5 w-5" />
+                  <span>{label}</span>
+                </a>
+              </Link>
+            ))}
+          </div>
+        </div>
+
+        {/* Desktop navigatie */}
+        <div className="hidden lg:flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
             {links.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href}>
