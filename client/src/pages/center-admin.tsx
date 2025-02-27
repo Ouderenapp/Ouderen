@@ -1,7 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
-import { Center, Activity, insertActivitySchema, updateActivitySchema } from "@shared/schema";
+import { Center, Activity, insertActivitySchema } from "@shared/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -17,15 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ActivityCard } from "@/components/activity-card";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { useState } from 'react';
 
 export default function CenterAdminPage() {
   const { user } = useAuth();
@@ -88,44 +79,6 @@ export default function CenterAdminPage() {
     },
   });
 
-  const [open, setOpen] = useState(false);
-  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
-  const editActivityForm = useForm({
-    resolver: zodResolver(updateActivitySchema),
-    defaultValues: {
-      name: editingActivity?.name || "",
-      description: editingActivity?.description || "",
-      imageUrl: editingActivity?.imageUrl || "",
-      date: editingActivity?.date || new Date().toISOString().slice(0, 16),
-      capacity: editingActivity?.capacity || 10,
-      centerId: editingActivity?.centerId || center?.id,
-      id: editingActivity?.id || "",
-    },
-  });
-
-  const updateActivityMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const response = await apiRequest("PUT", `/api/activities/${data.id}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/activities`] });
-      setOpen(false);
-      setEditingActivity(null);
-      toast({
-        title: "Activiteit bijgewerkt",
-        description: "De activiteit is succesvol bijgewerkt.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Fout bij bijwerken activiteit",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   // Aanmaken van nieuwe activiteit
   const createActivityMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -148,9 +101,6 @@ export default function CenterAdminPage() {
       });
     },
   });
-
-  const defaultImageUrl = "/images/default-activity-image.jpg"; // Replace with actual path
-
 
   if (isLoadingCenter || isLoadingActivities) {
     return (
@@ -322,10 +272,10 @@ export default function CenterAdminPage() {
                 <FormItem>
                   <FormLabel>Datum en tijd</FormLabel>
                   <FormControl>
-                    <Input
-                      type="datetime-local"
-                      {...field}
-                      value={field.value ? field.value.slice(0, 16) : ""}
+                    <Input 
+                      type="datetime-local" 
+                      {...field} 
+                      value={field.value ? field.value.slice(0, 16) : ""} 
                     />
                   </FormControl>
                   <FormMessage />
@@ -370,96 +320,9 @@ export default function CenterAdminPage() {
         <h2 className="text-2xl font-bold">Huidige Activiteiten</h2>
         <div className="grid gap-6 md:grid-cols-2">
           {activities?.map((activity) => (
-            <div key={activity.id}>
-              <ActivityCard activity={activity} />
-              <Button onClick={() => {setOpen(true); setEditingActivity(activity);}}>
-                Bewerk
-              </Button>
-            </div>
+            <ActivityCard key={activity.id} activity={activity} />
           ))}
         </div>
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogHeader>
-            <DialogTitle>Activiteit Bewerken</DialogTitle>
-          </DialogHeader>
-          <DialogContent>
-            <Form {...editActivityForm}>
-              <form onSubmit={editActivityForm.handleSubmit((data) => updateActivityMutation.mutate(data))}>
-                <FormField
-                  control={editActivityForm.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Naam</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editActivityForm.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Beschrijving</FormLabel>
-                      <FormControl>
-                        <Textarea {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editActivityForm.control}
-                  name="imageUrl"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Afbeelding URL</FormLabel>
-                      <FormControl>
-                        <Input {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editActivityForm.control}
-                  name="date"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Datum en tijd</FormLabel>
-                      <FormControl>
-                        <Input type="datetime-local" {...field} value={field.value ? field.value.slice(0, 16) : ""} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={editActivityForm.control}
-                  name="capacity"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Capaciteit</FormLabel>
-                      <FormControl>
-                        <Input type="number" {...field} onChange={(e) => field.onChange(parseInt(e.target.value))} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" disabled={updateActivityMutation.isPending}>
-                  {updateActivityMutation.isPending ? "Bezig met opslaan..." : "Wijzigingen opslaan"}
-                </Button>
-              </form>
-            </Form>
-          </DialogContent>
-          <DialogFooter>
-            <Button onClick={() => setOpen(false)}>Annuleren</Button>
-          </DialogFooter>
-        </Dialog>
       </div>
     </div>
   );
