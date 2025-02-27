@@ -353,6 +353,26 @@ export default function CenterAdminPage() {
               )}
             />
 
+            <FormField
+              control={activityForm.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Prijs (optioneel)</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      placeholder="0.00"
+                      {...field}
+                      onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <Button
               type="submit"
               disabled={createActivityMutation.isPending}
@@ -463,7 +483,25 @@ export default function CenterAdminPage() {
                   </FormItem>
                 )}
               />
-
+              <FormField
+                control={editActivityForm.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Prijs (optioneel)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                        onChange={(e) => field.onChange(parseFloat(e.target.value))}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <DialogFooter>
                 <Button
                   type="button"

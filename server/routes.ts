@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, insertCenterSchema, type User } from "@shared/schema";
 import { hashPassword } from "./auth";
 import { sendWelcomeEmail, sendActivityRegistrationEmail } from "./email";
+import { createPaymentIntent, handleWebhook } from "./stripe";
 
 // Middleware om te controleren of een gebruiker een center admin is
 function isCenterAdmin(req: Request, res: Response, next: NextFunction) {
@@ -337,6 +338,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json(user);
   });
 
+  // Payment related routes
+  app.post("/api/activities/:id/payment", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "U moet eerst inloggen" });
+      }
+
+      const activityId = parseInt(req.params.id);
+      if (isNaN(activityId)) {
+        return res.status(400).json({ message: "Ongeldige activiteit ID" });
+      }
+
+      const activity = await storage.getActivity(activityId);
+      if (!activity) {
+        return res.status(404).json({ message: "Activiteit niet gevonden" });
+      }
+
+      if (!activity.price) {
+        return res.status(400).json({ message: "Deze activiteit is gratis" });
+      }
+
+      // Create a payment intent with Stripe
+      const paymentIntent = await createPaymentIntent(
+        parseFloat(activity.price.toString()),
+        'eur'
+      );
+
+      // Create a pending registration
+      const registration = await storage.createRegistration({
+        userId: req.user!.id,
+        activityId,
+        paymentStatus: 'pending',
+        paymentIntentId: paymentIntent.id
+      });
+
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error) {
+      console.error('Error creating payment:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden bij het verwerken van de betaling" });
+    }
+  });
+
+  // Stripe webhook handler
+  app.post("/api/webhook", async (req, res) => {
+    const signature = req.headers['stripe-signature'];
+
+    if (!signature) {
+      return res.status(400).json({ message: "Geen Stripe handtekening gevonden" });
+    }
+
+    try {
+      await handleWebhook(req.body, signature);
+      res.json({ received: true });
+    } catch (error) {
+      console.error('Webhook Error:', error);
+      res.status(400).json({ message: "Webhook Error" });
+    }
+  });
+
+
   // Registrations
   app.get("/api/activities/:id/registrations", async (req, res) => {
     const activityId = parseInt(req.params.id);
@@ -380,6 +441,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (isNaN(activityId)) {
         return res.status(400).json({message: "Invalid activity ID"});
     }
+
     const result = insertRegistrationSchema.safeParse({
       userId: req.body.userId,
       activityId
@@ -394,12 +456,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Activity not found" });
     }
 
+    // Check if the activity is paid and payment is required
+    if (activity.price) {
+      // Payment should be handled through the payment endpoint
+      return res.status(400).json({ 
+        message: "Deze activiteit vereist betaling. Gebruik de betaalfunctie." 
+      });
+    }
+
     const registrations = await storage.getRegistrations(activityId);
     if (registrations.length >= activity.capacity) {
       return res.status(400).json({ message: "Activity is full" });
     }
 
-    const registration = await storage.createRegistration(result.data);
+    const registration = await storage.createRegistration({
+      ...result.data,
+      paymentStatus: 'not_required'
+    });
 
     // Create a reminder for this activity
     const activityDate = new Date(activity.date);

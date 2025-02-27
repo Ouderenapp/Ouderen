@@ -5,6 +5,11 @@ import { setupVite, serveStatic, log } from "./vite";
 import { initializeEmailService } from "./email";
 
 const app = express();
+
+// Add raw body parser for Stripe webhooks
+app.use("/api/webhook", express.raw({ type: "application/json" }));
+
+// Regular body parsers for other routes
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
