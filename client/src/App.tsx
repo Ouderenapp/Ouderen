@@ -25,6 +25,7 @@ function Router() {
       <Route path="/auth" component={Auth} />
       <Route path="/center-admin" component={CenterAdmin} />
       <Route path="/activity-stats" component={ActivityStats} />
+      <Route path="/help" component={Help} />
       <Route component={NotFound} />
     </Switch>
   );
