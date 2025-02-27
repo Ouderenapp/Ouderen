@@ -15,6 +15,8 @@ export const updateActivitySchema = z.object({
     })
     .transform(str => new Date(str)),
   capacity: z.number().int().positive(),
+  materialsNeeded: z.string().optional(),
+  facilitiesAvailable: z.string().optional(),
 });
 
 export const users = pgTable("users", {
@@ -35,8 +37,8 @@ export const centers = pgTable("centers", {
   address: text("address").notNull(),
   description: text("description").notNull(),
   imageUrl: text("image_url").notNull(),
-  adminId: integer("admin_id").notNull(), 
-  village: text("village").notNull(), 
+  adminId: integer("admin_id").notNull(),
+  village: text("village").notNull(),
 });
 
 export const activities = pgTable("activities", {
@@ -47,12 +49,21 @@ export const activities = pgTable("activities", {
   imageUrl: text("image_url").notNull(),
   date: timestamp("date").notNull(),
   capacity: integer("capacity").notNull(),
+  materialsNeeded: text("materials_needed"),
+  facilitiesAvailable: text("facilities_available"),
 });
 
 export const registrations = pgTable("registrations", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
   activityId: integer("activity_id").notNull(),
+});
+
+export const waitlist = pgTable("waitlist", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  activityId: integer("activity_id").notNull(),
+  registrationDate: timestamp("registration_date").notNull().defaultNow(),
 });
 
 export const reminders = pgTable("reminders", {
@@ -65,9 +76,26 @@ export const reminders = pgTable("reminders", {
   isRead: boolean("is_read").notNull().default(false),
 });
 
+export const carpools = pgTable("carpools", {
+  id: serial("id").primaryKey(),
+  activityId: integer("activity_id").notNull(),
+  driverId: integer("driver_id").notNull(),
+  departureLocation: text("departure_location").notNull(),
+  departureTime: timestamp("departure_time").notNull(),
+  availableSeats: integer("available_seats").notNull(),
+});
+
+export const carpoolPassengers = pgTable("carpool_passengers", {
+  id: serial("id").primaryKey(),
+  carpoolId: integer("carpool_id").notNull(),
+  passengerId: integer("passenger_id").notNull(),
+});
+
+// Insert schemas
 export const insertReminderSchema = createInsertSchema(reminders);
-export type InsertReminder = z.infer<typeof insertReminderSchema>;
-export type Reminder = typeof reminders.$inferSelect;
+export const insertWaitlistSchema = createInsertSchema(waitlist);
+export const insertCarpoolSchema = createInsertSchema(carpools);
+export const insertCarpoolPassengerSchema = createInsertSchema(carpoolPassengers);
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
@@ -84,15 +112,23 @@ export const insertCenterSchema = createInsertSchema(centers);
 export const insertActivitySchema = createInsertSchema(activities).extend({
   date: z.string().transform((str) => new Date(str)),
 });
-// The updateActivitySchema is already defined at the top of the file
 export const insertRegistrationSchema = createInsertSchema(registrations);
 
+// Types
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type InsertCenter = z.infer<typeof insertCenterSchema>;
 export type InsertActivity = z.infer<typeof insertActivitySchema>;
 export type InsertRegistration = z.infer<typeof insertRegistrationSchema>;
+export type InsertReminder = z.infer<typeof insertReminderSchema>;
+export type InsertWaitlist = z.infer<typeof insertWaitlistSchema>;
+export type InsertCarpool = z.infer<typeof insertCarpoolSchema>;
+export type InsertCarpoolPassenger = z.infer<typeof insertCarpoolPassengerSchema>;
 
 export type User = typeof users.$inferSelect;
 export type Center = typeof centers.$inferSelect;
 export type Activity = typeof activities.$inferSelect;
 export type Registration = typeof registrations.$inferSelect;
+export type Reminder = typeof reminders.$inferSelect;
+export type Waitlist = typeof waitlist.$inferSelect;
+export type Carpool = typeof carpools.$inferSelect;
+export type CarpoolPassenger = typeof carpoolPassengers.$inferSelect;

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { formatDistanceToNow, format } from "date-fns";
 import type { Activity } from "@shared/schema";
-import { Calendar, Users } from "lucide-react";
+import { Calendar, Users, Car, Package, Building2 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useLocation } from "wouter";
 
@@ -13,9 +13,21 @@ interface ActivityCardProps {
   isRegistered?: boolean;
   onEdit?: (activity: Activity) => void;
   onEditClick?: (activity: Activity) => void;
+  waitlistPosition?: number;
+  onWaitlist?: boolean;
+  onJoinWaitlist?: () => void;
 }
 
-export function ActivityCard({ activity, onRegister, isRegistered, onEdit, onEditClick }: ActivityCardProps) {
+export function ActivityCard({ 
+  activity, 
+  onRegister, 
+  isRegistered, 
+  onEdit, 
+  onEditClick,
+  waitlistPosition,
+  onWaitlist,
+  onJoinWaitlist
+}: ActivityCardProps) {
   const { isAuthenticated, user } = useAuth();
   const [, setLocation] = useLocation();
   const isFull = activity.capacity <= 0;
@@ -57,30 +69,73 @@ export function ActivityCard({ activity, onRegister, isRegistered, onEdit, onEdi
           </div>
         )}
       </div>
-      <CardContent>
+      <CardContent className="space-y-4">
         <div className="flex items-center space-x-2 text-lg text-muted-foreground">
           <Calendar className="h-5 w-5" />
           <time dateTime={date.toISOString()}>
             {format(date, "EEEE, MMMM d 'at' h:mm a")}
           </time>
         </div>
-        <p className="mt-4 text-lg">{activity.description}</p>
+
+        <p className="text-lg">{activity.description}</p>
+
+        {/* Materialen en faciliteiten */}
+        {(activity.materialsNeeded || activity.facilitiesAvailable) && (
+          <div className="space-y-2">
+            {activity.materialsNeeded && (
+              <div className="flex items-center gap-2">
+                <Package className="h-5 w-5 text-muted-foreground" />
+                <p className="text-sm">Meenemen: {activity.materialsNeeded}</p>
+              </div>
+            )}
+            {activity.facilitiesAvailable && (
+              <div className="flex items-center gap-2">
+                <Building2 className="h-5 w-5 text-muted-foreground" />
+                <p className="text-sm">Beschikbaar: {activity.facilitiesAvailable}</p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Capaciteit indicator */}
+        <div className="flex items-center gap-2">
+          <Users className="h-5 w-5 text-muted-foreground" />
+          <span className="text-sm text-muted-foreground">
+            {isFull ? "Vol" : `Nog ${activity.capacity} plekken beschikbaar`}
+          </span>
+        </div>
       </CardContent>
+
       <CardFooter className="flex justify-between">
         <Link href={`/activities/${activity.id}`}>
-          <Button asChild>
-            <span>View Details</span>
-          </Button>
+          <Button variant="outline">Details bekijken</Button>
         </Link>
-        {onRegister && (
-          <Button
-            size="lg"
-            variant={isRegistered ? "secondary" : "default"}
-            onClick={onRegister}
-          >
-            {isRegistered ? "Annuleren" : "Aanmelden"}
-          </Button>
-        )}
+
+        <div className="space-x-2">
+          {/* Wachtlijst knop */}
+          {isFull && !isRegistered && onJoinWaitlist && (
+            <Button
+              variant="secondary"
+              onClick={onJoinWaitlist}
+              disabled={onWaitlist}
+            >
+              {onWaitlist 
+                ? `#${waitlistPosition} op wachtlijst` 
+                : "Aanmelden voor wachtlijst"}
+            </Button>
+          )}
+
+          {/* Registratie knop */}
+          {onRegister && (
+            <Button
+              variant={isRegistered ? "secondary" : "default"}
+              onClick={onRegister}
+              disabled={isFull && !isRegistered}
+            >
+              {isRegistered ? "Afmelden" : "Aanmelden"}
+            </Button>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );

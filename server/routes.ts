@@ -182,6 +182,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(activity);
   });
 
+  // Waitlist routes
+  app.get("/api/activities/:id/waitlist", async (req, res) => {
+    try {
+      const activityId = parseInt(req.params.id);
+      const waitlistEntries = await storage.getWaitlist(activityId);
+      const users = await Promise.all(
+        waitlistEntries.map(entry => storage.getUser(entry.userId))
+      );
+
+      // Filter out undefined users and respect anonymity settings
+      const filteredUsers = users
+        .filter((user): user is User => user !== undefined)
+        .map(user => {
+          if (user.anonymousParticipation) {
+            return {
+              id: user.id,
+              village: user.village,
+              neighborhood: user.neighborhood,
+              anonymousParticipation: true,
+              position: waitlistEntries.findIndex(e => e.userId === user.id) + 1
+            };
+          }
+          return {
+            id: user.id,
+            displayName: user.displayName,
+            village: user.village,
+            neighborhood: user.neighborhood,
+            anonymousParticipation: false,
+            position: waitlistEntries.findIndex(e => e.userId === user.id) + 1
+          };
+        });
+
+      res.json(filteredUsers);
+    } catch (error) {
+      console.error('Error getting waitlist:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  app.post("/api/activities/:id/waitlist", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "U moet eerst inloggen" });
+      }
+
+      const activityId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
+      // Check if activity exists and is full
+      const activity = await storage.getActivity(activityId);
+      if (!activity) {
+        return res.status(404).json({ message: "Activiteit niet gevonden" });
+      }
+
+      const registrations = await storage.getRegistrations(activityId);
+      if (registrations.length < activity.capacity) {
+        return res.status(400).json({ message: "Er zijn nog plekken beschikbaar" });
+      }
+
+      // Check if user is already on waitlist
+      const waitlist = await storage.getWaitlist(activityId);
+      if (waitlist.some(entry => entry.userId === userId)) {
+        return res.status(400).json({ message: "U staat al op de wachtlijst" });
+      }
+
+      // Add to waitlist
+      const waitlistEntry = await storage.addToWaitlist({
+        userId,
+        activityId,
+        registrationDate: new Date()
+      });
+
+      const position = await storage.getWaitlistPosition(userId, activityId);
+      res.status(201).json({ ...waitlistEntry, position });
+    } catch (error) {
+      console.error('Error adding to waitlist:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  app.delete("/api/activities/:id/waitlist", async (req, res) => {
+    try {
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ message: "U moet eerst inloggen" });
+      }
+
+      const activityId = parseInt(req.params.id);
+      const userId = req.user!.id;
+
+      await storage.removeFromWaitlist(userId, activityId);
+      res.status(204).send();
+    } catch (error) {
+      console.error('Error removing from waitlist:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
   // Users
   app.post("/api/users", async (req, res) => {
     const result = insertUserSchema.safeParse(req.body);
@@ -254,12 +351,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const registration = await storage.createRegistration(result.data);
-    
+
     // Create a reminder for this activity
     const activityDate = new Date(activity.date);
     const dayBeforeActivity = new Date(activityDate);
     dayBeforeActivity.setDate(dayBeforeActivity.getDate() - 1);
-    
+
     await storage.createReminder({
       userId: req.body.userId,
       activityId,
@@ -268,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       message: `Morgen begint de activiteit "${activity.name}". Vergeet niet om hierbij aanwezig te zijn!`,
       isRead: false
     });
-    
+
     res.status(201).json(registration);
   });
 
@@ -277,16 +374,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userId = req.body.userId;
 
     await storage.deleteRegistration(userId, activityId);
-    
+
     // Get all reminders for this user and activity
     const userReminders = await storage.getRemindersByUser(userId);
     const activityReminders = userReminders.filter(r => r.activityId === activityId);
-    
+
     // Delete all reminders for this activity
     for (const reminder of activityReminders) {
       await storage.deleteReminder(reminder.id);
     }
-    
+
     res.status(204).send();
   });
 
@@ -349,7 +446,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       next(err);
     }
   });
-  
+
   // Reminder routes
   app.get("/api/users/:id/reminders", async (req, res) => {
     if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
@@ -359,7 +456,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const reminders = await storage.getRemindersByUser(parseInt(req.params.id));
     res.json(reminders);
   });
-  
+
   app.get("/api/users/:id/upcoming-reminders", async (req, res) => {
     if (!req.isAuthenticated() || req.user?.id !== parseInt(req.params.id)) {
       return res.status(401).json({ message: "Niet geautoriseerd" });
@@ -368,14 +465,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const reminders = await storage.getUpcomingReminders(parseInt(req.params.id));
     res.json(reminders);
   });
-  
+
   app.patch("/api/reminders/:id", async (req, res) => {
     try {
       const reminderId = parseInt(req.params.id);
       if (!req.isAuthenticated()) {
         return res.status(401).json({ message: "Niet geautoriseerd" });
       }
-      
+
       const updated = await storage.updateReminder(reminderId, req.body);
       res.json(updated);
     } catch (error) {
