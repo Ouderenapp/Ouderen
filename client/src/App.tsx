@@ -12,7 +12,6 @@ import Profile from "@/pages/profile";
 import Auth from "@/pages/auth";
 import CenterAdmin from "@/pages/center-admin";
 import ActivityStats from "@/pages/activity-stats";
-import Help from "@/pages/help";  // Added import
 import Navigation from "@/components/navigation";
 
 function Router() {
@@ -25,7 +24,6 @@ function Router() {
       <Route path="/auth" component={Auth} />
       <Route path="/center-admin" component={CenterAdmin} />
       <Route path="/activity-stats" component={ActivityStats} />
-      <Route path="/help" component={Help} />  {/* Added route */}
       <Route component={NotFound} />
     </Switch>
   );
