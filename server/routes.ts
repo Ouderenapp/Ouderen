@@ -135,6 +135,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!center || center.adminId !== req.user?.id) {
       return res.status(403).json({ message: "U heeft geen rechten om activiteiten toe te voegen aan dit buurthuis" });
     }
+    
+    // Standaard afbeelding toevoegen als er geen URL is opgegeven
+    if (!result.data.imageUrl || result.data.imageUrl.trim() === "") {
+      result.data.imageUrl = "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3";
+    }
 
     const activity = await storage.createActivity(result.data);
     res.status(201).json(activity);
@@ -153,7 +158,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).json({ message: "U heeft geen rechten om deze activiteit te bewerken" });
     }
 
-    const updatedActivity = await storage.updateActivity(activityId, req.body);
+    // Kopieer de data om aanpassingen te maken
+    const updateData = { ...req.body };
+    
+    // Standaard afbeelding toevoegen als er geen URL is opgegeven
+    if (!updateData.imageUrl || updateData.imageUrl.trim() === "") {
+      updateData.imageUrl = "https://images.unsplash.com/photo-1528605248644-14dd04022da1?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3";
+    }
+
+    const updatedActivity = await storage.updateActivity(activityId, updateData);
     res.json(updatedActivity);
   });
 

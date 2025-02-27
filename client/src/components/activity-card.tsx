@@ -9,9 +9,10 @@ interface ActivityCardProps {
   activity: Activity;
   onRegister?: () => void;
   isRegistered?: boolean;
+  actionButton?: React.ReactNode;
 }
 
-export function ActivityCard({ activity, onRegister, isRegistered }: ActivityCardProps) {
+export function ActivityCard({ activity, onRegister, isRegistered, actionButton }: ActivityCardProps) {
   const date = new Date(activity.date);
 
   return (
@@ -37,15 +38,18 @@ export function ActivityCard({ activity, onRegister, isRegistered }: ActivityCar
             View Details
           </a>
         </Link>
-        {onRegister && (
-          <Button
-            size="lg"
-            variant={isRegistered ? "secondary" : "default"}
-            onClick={onRegister}
-          >
-            {isRegistered ? "Annuleren" : "Aanmelden"}
-          </Button>
-        )}
+        <div className="flex space-x-2">
+          {actionButton}
+          {onRegister && (
+            <Button
+              size="lg"
+              variant={isRegistered ? "secondary" : "default"}
+              onClick={onRegister}
+            >
+              {isRegistered ? "Annuleren" : "Aanmelden"}
+            </Button>
+          )}
+        </div>
       </CardFooter>
     </Card>
   );
