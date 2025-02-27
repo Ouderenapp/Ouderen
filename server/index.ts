@@ -9,15 +9,14 @@ const app = express();
 // Add global error handlers
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
-  process.exit(1); // Exit on uncaught exception
+  process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
 });
 
-// Configure body parsers - IMPORTANT: Stripe webhook parser must come first
-app.use("/api/webhook", express.raw({ type: "application/json" }));
+// Configure body parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -81,24 +80,13 @@ app.use((req, res, next) => {
     }
 
     const port = 5000;
-    try {
-      await new Promise((resolve, reject) => {
-        server.listen({
-          port,
-          host: "0.0.0.0",
-        }, () => {
-          console.log(`Server started successfully on http://0.0.0.0:${port}`);
-          log(`Server started successfully, serving on port ${port}`);
-          resolve(true);
-        }).on('error', (err) => {
-          console.error("Failed to start server:", err);
-          reject(err);
-        });
-      });
-    } catch (error) {
-      console.error("Critical error starting server:", error);
-      process.exit(1);
-    }
+    server.listen({
+      port,
+      host: "0.0.0.0"
+    }, () => {
+      console.log(`Server started successfully on http://0.0.0.0:${port}`);
+      log(`Server started successfully, serving on port ${port}`);
+    });
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);
