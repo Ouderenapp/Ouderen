@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, insertCenterSchema } from "@shared/schema";
-import { hashPassword } from "./auth"; // Assuming this function exists for password hashing
+import { hashPassword } from "./auth";
 
 // Middleware om te controleren of een gebruiker een center admin is
 function isCenterAdmin(req: Express.Request, res: Express.Response, next: Express.NextFunction) {
@@ -15,9 +15,18 @@ function isCenterAdmin(req: Express.Request, res: Express.Response, next: Expres
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
 
+  // Nieuwe route om het buurthuis van een admin op te halen
+  app.get("/api/centers/my-center", isCenterAdmin, async (req, res) => {
+    const centers = await storage.getCentersByAdmin(req.user!.id);
+    if (centers.length === 0) {
+      return res.status(404).json({ message: "Geen buurthuis gevonden" });
+    }
+    res.json(centers[0]); // Een admin heeft maar één buurthuis
+  });
+
   // Centers
   app.get("/api/centers", async (req, res) => {
-    const village = req.user?.village; // Filter op dorp van ingelogde gebruiker
+    const village = req.user?.village;
     const centers = await storage.getCenters(village);
     res.json(centers);
   });
@@ -271,7 +280,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Update the register route
+  // Update the register route to properly create a center for admin users
   app.post("/api/register", async (req, res, next) => {
     try {
       const existingUser = await storage.getUserByUsername(req.body.username);
@@ -295,7 +304,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           village: user.village
         });
 
-        // Log het aangemaakte centrum voor debugging
         console.log('Created center:', center);
       }
 

@@ -22,22 +22,19 @@ export default function CenterAdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Fetch centers data
-  const { data: centers, isLoading: isLoadingCenters } = useQuery<Center[]>({
-    queryKey: ["/api/centers"],
+  // Direct het buurthuis ophalen voor de ingelogde admin
+  const { data: center, isLoading: isLoadingCenter } = useQuery<Center>({
+    queryKey: ["/api/centers/my-center"],
     enabled: !!user?.id && user?.role === 'center_admin',
   });
 
-  // Find the center for this admin
-  const center = centers?.find(c => c.adminId === user?.id);
-
-  // Fetch activities for this center
+  // Activiteiten ophalen voor dit buurthuis
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: ["/api/activities", { centerId: center?.id }],
     enabled: !!center?.id,
   });
 
-  // Form for updating center details
+  // Form voor het bijwerken van buurthuis details
   const centerForm = useForm({
     defaultValues: {
       name: center?.name || "",
@@ -47,13 +44,14 @@ export default function CenterAdminPage() {
     },
   });
 
+  // Bijwerken van buurthuis informatie
   const updateCenterMutation = useMutation({
     mutationFn: async (data: Partial<Center>) => {
       const response = await apiRequest("PUT", `/api/centers/${center?.id}`, data);
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/centers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/centers/my-center"] });
       toast({
         title: "Buurthuis bijgewerkt",
         description: "De wijzigingen zijn succesvol opgeslagen.",
@@ -68,7 +66,7 @@ export default function CenterAdminPage() {
     },
   });
 
-  // Form for creating new activities
+  // Form voor het aanmaken van nieuwe activiteiten
   const activityForm = useForm({
     resolver: zodResolver(insertActivitySchema),
     defaultValues: {
@@ -81,6 +79,7 @@ export default function CenterAdminPage() {
     },
   });
 
+  // Aanmaken van nieuwe activiteit
   const createActivityMutation = useMutation({
     mutationFn: async (data: any) => {
       const response = await apiRequest("POST", "/api/activities", data);
@@ -103,7 +102,7 @@ export default function CenterAdminPage() {
     },
   });
 
-  if (isLoadingCenters || isLoadingActivities) {
+  if (isLoadingCenter || isLoadingActivities) {
     return (
       <div>
         <h1 className="text-4xl font-bold">Buurthuis laden...</h1>
@@ -114,23 +113,12 @@ export default function CenterAdminPage() {
     );
   }
 
-  if (user?.role !== 'center_admin') {
+  if (!center) {
     return (
       <div>
         <h1 className="text-4xl font-bold">Geen toegang</h1>
         <p className="mt-2 text-xl text-muted-foreground">
           Deze pagina is alleen toegankelijk voor buurthuisbeheerders.
-        </p>
-      </div>
-    );
-  }
-
-  if (!center) {
-    return (
-      <div>
-        <h1 className="text-4xl font-bold">Buurthuis niet gevonden</h1>
-        <p className="mt-2 text-xl text-muted-foreground">
-          Er is geen buurthuis gekoppeld aan uw account. Neem contact op met de beheerder.
         </p>
       </div>
     );
