@@ -24,13 +24,13 @@ export default function CenterAdminPage() {
 
   // Direct het buurthuis ophalen voor de ingelogde admin
   const { data: center, isLoading: isLoadingCenter } = useQuery<Center>({
-    queryKey: ["/api/centers/my-center"],
+    queryKey: [`/api/centers/my-center`],
     enabled: !!user?.id && user?.role === 'center_admin',
   });
 
   // Activiteiten ophalen voor dit buurthuis
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
-    queryKey: ["/api/activities", { centerId: center?.id }],
+    queryKey: [`/api/activities`, { centerId: center?.id }],
     enabled: !!center?.id,
   });
 
@@ -104,7 +104,7 @@ export default function CenterAdminPage() {
 
   if (isLoadingCenter || isLoadingActivities) {
     return (
-      <div>
+      <div className="space-y-8">
         <h1 className="text-4xl font-bold">Buurthuis laden...</h1>
         <p className="mt-2 text-xl text-muted-foreground">
           Even geduld alstublieft.
@@ -115,10 +115,10 @@ export default function CenterAdminPage() {
 
   if (!center) {
     return (
-      <div>
-        <h1 className="text-4xl font-bold">Geen toegang</h1>
+      <div className="space-y-8">
+        <h1 className="text-4xl font-bold">Deze pagina is alleen toegankelijk voor buurthuisbeheerders</h1>
         <p className="mt-2 text-xl text-muted-foreground">
-          Deze pagina is alleen toegankelijk voor buurthuisbeheerders.
+          Als u een buurthuisbeheerder bent en dit bericht ziet, neem dan contact op met de beheerder.
         </p>
       </div>
     );

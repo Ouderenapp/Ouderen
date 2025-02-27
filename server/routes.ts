@@ -71,7 +71,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(updatedCenter);
   });
 
-  // Activities
+  // Activities 
   app.get("/api/activities", async (req, res) => {
     const centerId = req.query.centerId ? parseInt(req.query.centerId as string) : undefined;
     const activities = await storage.getActivities(centerId);
@@ -135,7 +135,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.json(activity);
   });
-
 
   // Users
   app.post("/api/users", async (req, res) => {

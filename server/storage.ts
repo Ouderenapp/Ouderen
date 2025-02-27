@@ -36,100 +36,190 @@ export interface IStorage {
 
 export class DatabaseStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.id, id));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      return user;
+    } catch (error) {
+      console.error('Error in getUser:', error);
+      throw error;
+    }
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    const [user] = await db.select().from(users).where(eq(users.username, username));
-    return user;
+    try {
+      const [user] = await db.select().from(users).where(eq(users.username, username));
+      return user;
+    } catch (error) {
+      console.error('Error in getUserByUsername:', error);
+      throw error;
+    }
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const [user] = await db.insert(users).values(insertUser).returning();
-    return user;
+    try {
+      const [user] = await db.insert(users).values(insertUser).returning();
+      return user;
+    } catch (error) {
+      console.error('Error in createUser:', error);
+      throw error;
+    }
   }
 
   async getCenters(village?: string): Promise<Center[]> {
-    if (village) {
-      return await db.select().from(centers).where(eq(centers.village, village));
+    try {
+      if (village) {
+        return await db.select().from(centers).where(eq(centers.village, village));
+      }
+      return await db.select().from(centers);
+    } catch (error) {
+      console.error('Error in getCenters:', error);
+      throw error;
     }
-    return await db.select().from(centers);
   }
 
   async getCenter(id: number): Promise<Center | undefined> {
-    const [center] = await db.select().from(centers).where(eq(centers.id, id));
-    return center;
+    try {
+      const [center] = await db.select().from(centers).where(eq(centers.id, id));
+      return center;
+    } catch (error) {
+      console.error('Error in getCenter:', error);
+      throw error;
+    }
   }
 
   async createCenter(insertCenter: InsertCenter): Promise<Center> {
-    const [center] = await db.insert(centers).values(insertCenter).returning();
-    return center;
+    try {
+      console.log('Creating center with data:', insertCenter);
+      const [center] = await db.insert(centers).values(insertCenter).returning();
+      console.log('Created center:', center);
+      return center;
+    } catch (error) {
+      console.error('Error in createCenter:', error);
+      throw error;
+    }
   }
 
   async updateCenter(id: number, data: Partial<Center>): Promise<Center> {
-    const [center] = await db
-      .update(centers)
-      .set(data)
-      .where(eq(centers.id, id))
-      .returning();
-    return center;
+    try {
+      const [center] = await db
+        .update(centers)
+        .set(data)
+        .where(eq(centers.id, id))
+        .returning();
+      return center;
+    } catch (error) {
+      console.error('Error in updateCenter:', error);
+      throw error;
+    }
   }
 
   async getCentersByAdmin(adminId: number): Promise<Center[]> {
-    return await db.select().from(centers).where(eq(centers.adminId, adminId));
+    try {
+      console.log('Getting centers for admin:', adminId);
+      const results = await db.select().from(centers).where(eq(centers.adminId, adminId));
+      console.log('Found centers:', results);
+      return results;
+    } catch (error) {
+      console.error('Error in getCentersByAdmin:', error);
+      throw error;
+    }
   }
 
   async getActivities(centerId?: number): Promise<Activity[]> {
-    if (centerId) {
-      return await db.select().from(activities).where(eq(activities.centerId, centerId));
+    try {
+      if (centerId) {
+        return await db.select().from(activities).where(eq(activities.centerId, centerId));
+      }
+      return await db.select().from(activities);
+    } catch (error) {
+      console.error('Error in getActivities:', error);
+      throw error;
     }
-    return await db.select().from(activities);
   }
 
   async getActivity(id: number): Promise<Activity | undefined> {
-    const [activity] = await db.select().from(activities).where(eq(activities.id, id));
-    return activity;
+    try {
+      const [activity] = await db.select().from(activities).where(eq(activities.id, id));
+      return activity;
+    } catch (error) {
+      console.error('Error in getActivity:', error);
+      throw error;
+    }
   }
 
   async createActivity(insertActivity: InsertActivity): Promise<Activity> {
-    const [activity] = await db.insert(activities).values(insertActivity).returning();
-    return activity;
+    try {
+      const [activity] = await db.insert(activities).values(insertActivity).returning();
+      return activity;
+    } catch (error) {
+      console.error('Error in createActivity:', error);
+      throw error;
+    }
   }
 
   async updateActivity(id: number, data: Partial<Activity>): Promise<Activity> {
-    const [activity] = await db
-      .update(activities)
-      .set(data)
-      .where(eq(activities.id, id))
-      .returning();
-    return activity;
+    try {
+      const [activity] = await db
+        .update(activities)
+        .set(data)
+        .where(eq(activities.id, id))
+        .returning();
+      return activity;
+    } catch (error) {
+      console.error('Error in updateActivity:', error);
+      throw error;
+    }
   }
 
   async deleteActivity(id: number): Promise<void> {
-    await db.delete(activities).where(eq(activities.id, id));
+    try {
+      await db.delete(activities).where(eq(activities.id, id));
+    } catch (error) {
+      console.error('Error in deleteActivity:', error);
+      throw error;
+    }
   }
 
   async getRegistrations(activityId: number): Promise<Registration[]> {
-    return await db.select().from(registrations).where(eq(registrations.activityId, activityId));
+    try {
+      return await db.select().from(registrations).where(eq(registrations.activityId, activityId));
+    } catch (error) {
+      console.error('Error in getRegistrations:', error);
+      throw error;
+    }
   }
 
   async getRegistrationsByUser(userId: number): Promise<Registration[]> {
-    return await db.select().from(registrations).where(eq(registrations.userId, userId));
+    try {
+      return await db.select().from(registrations).where(eq(registrations.userId, userId));
+    } catch (error) {
+      console.error('Error in getRegistrationsByUser:', error);
+      throw error;
+    }
   }
 
   async createRegistration(insertRegistration: InsertRegistration): Promise<Registration> {
-    const [registration] = await db.insert(registrations).values(insertRegistration).returning();
-    return registration;
+    try {
+      const [registration] = await db.insert(registrations).values(insertRegistration).returning();
+      return registration;
+    } catch (error) {
+      console.error('Error in createRegistration:', error);
+      throw error;
+    }
   }
 
   async deleteRegistration(userId: number, activityId: number): Promise<void> {
-    await db.delete(registrations).where(
-      and(
-        eq(registrations.userId, userId),
-        eq(registrations.activityId, activityId)
-      )
-    );
+    try {
+      await db.delete(registrations).where(
+        and(
+          eq(registrations.userId, userId),
+          eq(registrations.activityId, activityId)
+        )
+      );
+    } catch (error) {
+      console.error('Error in deleteRegistration:', error);
+      throw error;
+    }
   }
 
   async updateUser(id: number, data: { 
@@ -139,12 +229,17 @@ export class DatabaseStorage implements IStorage {
     village?: string,
     neighborhood?: string
   }): Promise<User> {
-    const [user] = await db
-      .update(users)
-      .set(data)
-      .where(eq(users.id, id))
-      .returning();
-    return user;
+    try {
+      const [user] = await db
+        .update(users)
+        .set(data)
+        .where(eq(users.id, id))
+        .returning();
+      return user;
+    } catch (error) {
+      console.error('Error in updateUser:', error);
+      throw error;
+    }
   }
 }
 
