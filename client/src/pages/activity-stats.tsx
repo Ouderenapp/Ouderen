@@ -2,7 +2,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useQuery } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Activity, Registration } from "@shared/schema";
+import { Activity, Registration, Center } from "@shared/schema";
 import {
   BarChart,
   Bar,
@@ -22,10 +22,16 @@ export default function ActivityStatsPage() {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Haal eerst het buurthuis op voor de ingelogde admin
+  const { data: center, isLoading: isLoadingCenter } = useQuery<Center>({
+    queryKey: [`/api/centers/my-center`],
+    enabled: !!user?.id && user?.role === 'center_admin',
+  });
+
   // Haal alle activiteiten op van dit buurthuis
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
-    queryKey: [`/api/activities`],
-    enabled: !!user?.id && user?.role === 'center_admin',
+    queryKey: [`/api/activities`, { centerId: center?.id }],
+    enabled: !!center?.id && !!user?.id && user?.role === 'center_admin',
   });
 
   // Haal alle registraties op voor deze activiteiten
@@ -34,7 +40,7 @@ export default function ActivityStatsPage() {
     enabled: !!activities?.length,
   });
 
-  if (isLoadingActivities || isLoadingRegistrations) {
+  if (isLoadingActivities || isLoadingRegistrations || isLoadingCenter) {
     return (
       <div className="space-y-8">
         <div className="h-64 animate-pulse rounded-lg bg-muted" />

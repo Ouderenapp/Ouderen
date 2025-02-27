@@ -125,7 +125,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json([]);
       }
 
-      // Voor normale gebruikers, activiteiten van opgegeven buurthuis tonen
+      // Voor normale gebruikers, alleen activiteiten van opgegeven buurthuis tonen
+      if (!centerId) {
+        return res.status(400).json({ message: "Buurthuis ID is verplicht" });
+      }
       const activities = await storage.getActivities(centerId);
       res.json(activities);
     } catch (error) {

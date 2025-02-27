@@ -104,7 +104,7 @@ export default function CenterAdminPage() {
       });
     },
   });
-  
+
   // Form voor het bewerken van activiteiten
   const editActivityForm = useForm({
     resolver: zodResolver(updateActivitySchema),
@@ -116,7 +116,7 @@ export default function CenterAdminPage() {
       capacity: 0,
     }
   });
-  
+
   // Bijwerken van een activiteit
   const updateActivityMutation = useMutation({
     mutationFn: async (data: any) => {
@@ -139,7 +139,7 @@ export default function CenterAdminPage() {
       });
     },
   });
-  
+
   // Open het bewerken dialog met de geselecteerde activiteit
   const handleEditActivity = (activity: Activity) => {
     setEditingActivity(activity);
@@ -322,10 +322,10 @@ export default function CenterAdminPage() {
                 <FormItem>
                   <FormLabel>Datum en tijd</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="datetime-local" 
-                      {...field} 
-                      value={field.value ? field.value.slice(0, 16) : ""} 
+                    <Input
+                      type="datetime-local"
+                      {...field}
+                      value={field.value ? field.value.slice(0, 16) : ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -370,9 +370,9 @@ export default function CenterAdminPage() {
         <h2 className="text-2xl font-bold">Huidige Activiteiten</h2>
         <div className="grid gap-6 md:grid-cols-2">
           {activities?.map((activity) => (
-            <ActivityCard 
-              key={activity.id} 
-              activity={activity} 
+            <ActivityCard
+              key={activity.id}
+              activity={activity}
               onEdit={handleEditActivity}
             />
           ))}
@@ -386,7 +386,7 @@ export default function CenterAdminPage() {
             <DialogTitle>Activiteit bewerken</DialogTitle>
           </DialogHeader>
           <Form {...editActivityForm}>
-            <form 
+            <form
               className="space-y-4"
               onSubmit={editActivityForm.handleSubmit((data) => updateActivityMutation.mutate(data))}
             >

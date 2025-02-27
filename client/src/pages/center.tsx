@@ -13,6 +13,7 @@ export default function CenterPage() {
 
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: [`/api/activities`, { centerId }],
+    enabled: !!centerId, // Only fetch when we have a centerId
   });
 
   if (isLoadingCenter || isLoadingActivities) {
@@ -46,12 +47,18 @@ export default function CenterPage() {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-3xl font-bold">Upcoming Activities</h2>
-        <div className="grid gap-6 md:grid-cols-2">
-          {activities?.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} />
-          ))}
-        </div>
+        <h2 className="text-3xl font-bold">Aankomende Activiteiten</h2>
+        {activities && activities.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2">
+            {activities.map((activity) => (
+              <ActivityCard key={activity.id} activity={activity} />
+            ))}
+          </div>
+        ) : (
+          <p className="text-xl text-muted-foreground">
+            Er zijn momenteel geen activiteiten gepland voor dit buurthuis.
+          </p>
+        )}
       </div>
     </div>
   );

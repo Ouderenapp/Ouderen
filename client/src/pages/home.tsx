@@ -25,11 +25,17 @@ export default function Home() {
     <div className="space-y-8">
       <OnboardingGuide />
       <h1 className="text-4xl font-bold">Activiteitencentra</h1>
-      <div className="grid gap-6 md:grid-cols-2">
-        {centers?.map((center) => (
-          <CenterCard key={center.id} center={center} />
-        ))}
-      </div>
+      {centers && centers.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-2">
+          {centers.map((center) => (
+            <CenterCard key={center.id} center={center} />
+          ))}
+        </div>
+      ) : (
+        <p className="text-xl text-muted-foreground">
+          Er zijn momenteel geen buurthuizen beschikbaar.
+        </p>
+      )}
     </div>
   );
 }
