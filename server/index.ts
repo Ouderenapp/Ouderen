@@ -10,7 +10,7 @@ app.use(express.urlencoded({ extended: false }));
 
 // Basic health check endpoint
 app.get("/health", (req, res) => {
-  res.send("ok");
+  res.status(200).json({ status: "ok" });
 });
 
 // Initialize email service
