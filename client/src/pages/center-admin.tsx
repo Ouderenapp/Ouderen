@@ -69,7 +69,7 @@ export default function CenterAdminPage() {
     },
   });
 
-  // The form for creating new activities
+  // Form for creating new activities
   const activityForm = useForm({
     resolver: zodResolver(insertActivitySchema),
     defaultValues: {
@@ -87,12 +87,20 @@ export default function CenterAdminPage() {
   // Creating a new activity
   const createActivityMutation = useMutation({
     mutationFn: async (data: any) => {
-      // Ensure centerId is included in the request
+      if (!center?.id) {
+        throw new Error("Geen buurthuis geselecteerd");
+      }
       const activityData = {
         ...data,
-        centerId: center?.id
+        centerId: center.id,
+        // Ensure date is properly formatted
+        date: new Date(data.date).toISOString()
       };
       const response = await apiRequest("POST", "/api/activities", activityData);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Er is een fout opgetreden");
+      }
       return response.json();
     },
     onSuccess: () => {
