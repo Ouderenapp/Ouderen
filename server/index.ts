@@ -1,8 +1,9 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
-import { setupVite, serveStatic, log } from "./vite";
+import { log } from "./vite";
 import { initializeEmailService } from "./email";
+import { db, sql } from "./db";
 
 const app = express();
 app.use(express.json());
@@ -66,6 +67,16 @@ process.on('unhandledRejection', (reason, promise) => {
     console.log("Starting server initialization...");
     log("Starting server setup...");
 
+    // Test database connection
+    try {
+      await db.execute(sql`SELECT 1`);
+      console.log("Database connection successful");
+      log("Database connection verified");
+    } catch (error) {
+      console.error("Database connection failed:", error);
+      process.exit(1);
+    }
+
     // Set up authentication before routes
     setupAuth(app);
     log("Authentication setup complete");
@@ -84,18 +95,8 @@ process.on('unhandledRejection', (reason, promise) => {
       res.status(status).json({ message });
     });
 
-    // Setup environment-specific middleware
-    if (app.get("env") === "development") {
-      await setupVite(app, server);
-      log("Vite setup complete");
-      console.log("Development server (Vite) configured");
-    } else {
-      serveStatic(app);
-      log("Static serving setup complete");
-    }
-
     // Start server
-    const port = 5001;
+    const port = 5000;
     server.listen(port, "0.0.0.0", () => {
       console.log(`Server started successfully on http://0.0.0.0:${port}`);
       log(`Server started successfully, serving on port ${port}`);
