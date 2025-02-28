@@ -7,6 +7,11 @@ if (!process.env.MONGODB_URI) {
 
 export async function connectDB() {
   try {
+    if (mongoose.connection.readyState === 1) {
+      console.log('Using existing MongoDB connection');
+      return mongoose;
+    }
+
     console.log("Attempting to connect to MongoDB...");
     log("MongoDB connection string is present");
 
@@ -17,6 +22,7 @@ export async function connectDB() {
     };
 
     await mongoose.connect(process.env.MONGODB_URI, options);
+    console.log('MongoDB connection successful');
 
     // Setup mongoose connection event handlers
     mongoose.connection.on('connected', () => {
@@ -35,6 +41,7 @@ export async function connectDB() {
     });
 
     log('Successfully connected to MongoDB');
+    return mongoose;
   } catch (error) {
     console.error('Error connecting to MongoDB:', error);
     log('Failed to connect to MongoDB');

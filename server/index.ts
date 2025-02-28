@@ -1,10 +1,7 @@
-import express, { type Request, Response, NextFunction } from "express";
-import { log } from "./vite";
-import { connectDB } from "./db";
+import express from "express";
 
 const app = express();
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
 
 // Basic health check endpoint
 app.get("/health", (req, res) => {
@@ -14,46 +11,16 @@ app.get("/health", (req, res) => {
 
 // Request logging middleware
 app.use((req, res, next) => {
-  const start = Date.now();
-  res.on("finish", () => {
-    const duration = Date.now() - start;
-    console.log(`${req.method} ${req.path} ${res.statusCode} in ${duration}ms`);
-  });
+  console.log(`${req.method} ${req.path}`);
   next();
 });
 
-// Global error handler
-app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
-  console.error("Server error:", err);
-  const status = err.status || err.statusCode || 500;
-  const message = err.message || "Internal Server Error";
-  res.status(status).json({ message });
+// Start server
+console.log("Starting server...");
+const port = 5000;
+app.listen(port, "0.0.0.0", () => {
+  console.log(`Server started successfully on http://0.0.0.0:${port}`);
+}).on('error', (error) => {
+  console.error('Error starting server:', error);
+  process.exit(1);
 });
-
-(async () => {
-  try {
-    console.log("Starting server initialization...");
-    log("Starting server setup...");
-
-    // Connect to MongoDB
-    try {
-      await connectDB();
-      console.log("MongoDB connection successful");
-      log("MongoDB connection verified");
-    } catch (error) {
-      console.error("MongoDB connection failed:", error);
-      process.exit(1);
-    }
-
-    // Start server
-    const port = 5000;
-    app.listen(port, "0.0.0.0", () => {
-      console.log(`Server started successfully on http://0.0.0.0:${port}`);
-      log(`Server started successfully, serving on port ${port}`);
-    });
-
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
-})();
