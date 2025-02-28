@@ -1,64 +1,77 @@
-import { mongoose } from './db';
-import { connectDB } from './db';
+
+import { db } from "./db";
+import { reminders, users, centers, activities, registrations } from "@shared/schema";
+import { sql } from "drizzle-orm";
 
 async function migrate() {
+  console.log("Starting database migration...");
+
   try {
-    // Connect to MongoDB
-    await connectDB();
-    console.log("Connected to MongoDB");
+    // Create tables if they don't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+        display_name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        village TEXT NOT NULL,
+        neighborhood TEXT NOT NULL,
+        anonymous_participation BOOLEAN NOT NULL DEFAULT false,
+        role TEXT NOT NULL DEFAULT 'user'
+      );
+    `);
 
-    // Create collections and indexes if needed
-    const db = mongoose.connection.db;
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS centers (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        address TEXT NOT NULL,
+        description TEXT NOT NULL,
+        image_url TEXT NOT NULL,
+        admin_id INTEGER NOT NULL,
+        village TEXT NOT NULL
+      );
+    `);
 
-    // Example: create reminders collection if it doesn't exist
-    const collections = await db.listCollections({ name: 'reminders' }).toArray();
-    if (collections.length === 0) {
-      await db.createCollection('reminders');
-      console.log("Created reminders collection");
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS activities (
+        id SERIAL PRIMARY KEY,
+        center_id INTEGER NOT NULL,
+        name TEXT NOT NULL,
+        description TEXT NOT NULL,
+        image_url TEXT NOT NULL,
+        date TIMESTAMP NOT NULL,
+        capacity INTEGER NOT NULL
+      );
+    `);
 
-      // Create indexes for the reminders collection
-      await db.collection('reminders').createIndex({ user_id: 1 });
-      await db.collection('reminders').createIndex({ activity_id: 1 });
-      console.log("Created indexes for reminders collection");
-    }
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS registrations (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        activity_id INTEGER NOT NULL
+      );
+    `);
 
-    // Create sessions collection if needed
-    const sessionCollections = await db.listCollections({ name: 'sessions' }).toArray();
-    if (sessionCollections.length === 0) {
-      await db.createCollection('sessions');
-      await db.collection('sessions').createIndex({ expires: 1 }, { expireAfterSeconds: 0 });
-      console.log("Created sessions collection with TTL index");
-    }
-
-    // Add other collections (users, centers, activities, registrations) here similarly.  Schema definition is needed in a separate file.
-    const userCollections = await db.listCollections({ name: 'users' }).toArray();
-    if (userCollections.length === 0) {
-        await db.createCollection('users');
-        console.log("Created users collection");
-    }
-    const centersCollections = await db.listCollections({ name: 'centers' }).toArray();
-    if (centersCollections.length === 0) {
-        await db.createCollection('centers');
-        console.log("Created centers collection");
-    }
-    const activitiesCollections = await db.listCollections({ name: 'activities' }).toArray();
-    if (activitiesCollections.length === 0) {
-        await db.createCollection('activities');
-        console.log("Created activities collection");
-    }
-    const registrationsCollections = await db.listCollections({ name: 'registrations' }).toArray();
-    if (registrationsCollections.length === 0) {
-        await db.createCollection('registrations');
-        console.log("Created registrations collection");
-    }
-
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS reminders (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        activity_id INTEGER NOT NULL,
+        reminder_date TIMESTAMP NOT NULL,
+        title TEXT NOT NULL,
+        message TEXT NOT NULL,
+        is_read BOOLEAN NOT NULL DEFAULT false
+      );
+    `);
 
     console.log("Migration completed successfully!");
   } catch (error) {
     console.error("Migration failed:", error);
   } finally {
-    // Close the connection
-    await mongoose.connection.close();
+    // Close the database connection pool
+    await db.pool.end();
   }
 }
 

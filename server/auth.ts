@@ -1,4 +1,3 @@
-
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Express } from "express";
@@ -7,7 +6,8 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import MongoStore from "connect-mongo";
+import { Pool } from "@neondatabase/serverless";
+import connectPg from "connect-pg-simple";
 
 declare global {
   namespace Express {
@@ -31,10 +31,13 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  const sessionStore = MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    collectionName: 'sessions',
-    ttl: 30 * 24 * 60 * 60, // 30 days in seconds
+  const PostgresStore = connectPg(session);
+  const sessionStore = new PostgresStore({
+    conObject: {
+      connectionString: process.env.DATABASE_URL,
+      ssl: true,
+    },
+    createTableIfMissing: true,
   });
 
   const sessionSettings: session.SessionOptions = {

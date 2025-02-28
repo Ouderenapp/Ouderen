@@ -1,52 +1,15 @@
-import mongoose from 'mongoose';
-import { log } from './vite';
+import { Pool, neonConfig } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-serverless';
+import ws from "ws";
+import * as schema from "@shared/schema";
 
-if (!process.env.MONGODB_URI) {
-  throw new Error("MONGODB_URI environment variable must be set");
+neonConfig.webSocketConstructor = ws;
+
+if (!process.env.DATABASE_URL) {
+  throw new Error(
+    "DATABASE_URL must be set. Did you forget to provision a database?",
+  );
 }
 
-export async function connectDB() {
-  try {
-    if (mongoose.connection.readyState === 1) {
-      console.log('Using existing MongoDB connection');
-      return mongoose;
-    }
-
-    console.log("Attempting to connect to MongoDB...");
-    log("MongoDB connection string is present");
-
-    // Add connection options for better stability
-    const options = {
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-    };
-
-    await mongoose.connect(process.env.MONGODB_URI, options);
-    console.log('MongoDB connection successful');
-
-    // Setup mongoose connection event handlers
-    mongoose.connection.on('connected', () => {
-      console.log('Mongoose connected to MongoDB');
-      log('Mongoose connected to MongoDB');
-    });
-
-    mongoose.connection.on('error', (err) => {
-      console.error('Mongoose connection error:', err);
-      log('Mongoose connection error occurred');
-    });
-
-    mongoose.connection.on('disconnected', () => {
-      console.log('Mongoose disconnected from MongoDB');
-      log('Mongoose disconnected from MongoDB');
-    });
-
-    log('Successfully connected to MongoDB');
-    return mongoose;
-  } catch (error) {
-    console.error('Error connecting to MongoDB:', error);
-    log('Failed to connect to MongoDB');
-    process.exit(1);
-  }
-}
-
-export { mongoose };
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const db = drizzle({ client: pool, schema });
