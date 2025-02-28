@@ -8,11 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActivityCard } from "@/components/activity-card";
 import { queryClient } from "@/lib/queryClient";
 import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export default function CenterAdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [editingActivity, setEditingActivity] = useState(null);
+  const [editingActivity, setEditingActivity] = useState<Activity | null>(null);
 
   // Direct het buurthuis ophalen voor de ingelogde admin
   const { data: center, isLoading: isLoadingCenter } = useQuery<Center>({
@@ -27,11 +28,11 @@ export default function CenterAdminPage() {
   });
 
   // Simpele submit handler voor activiteiten
-  const handleSubmitActivity = async (e) => {
+  const handleSubmitActivity = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!center?.id) return;
 
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.currentTarget);
     const data = {
       name: formData.get('name'),
       description: formData.get('description'),
@@ -57,7 +58,7 @@ export default function CenterAdminPage() {
       toast({ title: "Activiteit aangemaakt" });
 
       // Reset het formulier
-      e.target.reset();
+      (e.target as HTMLFormElement).reset();
     } catch (error) {
       toast({ 
         title: "Fout",
@@ -68,11 +69,11 @@ export default function CenterAdminPage() {
   };
 
   // Simpele submit handler voor buurthuis aanpassen
-  const handleSubmitCenter = async (e) => {
+  const handleSubmitCenter = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!center?.id) return;
 
-    const formData = new FormData(e.target);
+    const formData = new FormData(e.currentTarget);
     const data = {
       name: formData.get('name'),
       description: formData.get('description'),
@@ -98,6 +99,46 @@ export default function CenterAdminPage() {
       toast({ 
         title: "Fout",
         description: "Kon buurthuis niet bijwerken",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Simpele submit handler voor activiteit bewerken
+  const handleUpdateActivity = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    if (!editingActivity?.id) return;
+
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      name: formData.get('name'),
+      description: formData.get('description'),
+      date: formData.get('date'),
+      capacity: parseInt(formData.get('capacity') as string) || 10,
+      imageUrl: formData.get('imageUrl') || editingActivity.imageUrl
+    };
+
+    try {
+      const response = await fetch(`/api/activities/${editingActivity.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error('Kon activiteit niet bijwerken');
+      }
+
+      // Refresh de activiteiten lijst
+      queryClient.invalidateQueries({ queryKey: [`/api/activities`] });
+      toast({ title: "Activiteit bijgewerkt" });
+
+      // Sluit de dialog
+      setEditingActivity(null);
+    } catch (error) {
+      toast({ 
+        title: "Fout",
+        description: "Kon activiteit niet bijwerken",
         variant: "destructive"
       });
     }
@@ -208,6 +249,64 @@ export default function CenterAdminPage() {
           ))}
         </div>
       </div>
+
+      {/* Dialog voor het bewerken van een activiteit */}
+      <Dialog open={!!editingActivity} onOpenChange={(open) => !open && setEditingActivity(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Activiteit bewerken</DialogTitle>
+          </DialogHeader>
+
+          <form onSubmit={handleUpdateActivity} className="space-y-4">
+            <div>
+              <label>Naam</label>
+              <Input 
+                name="name"
+                defaultValue={editingActivity?.name}
+                required 
+              />
+            </div>
+
+            <div>
+              <label>Beschrijving</label>
+              <Textarea 
+                name="description"
+                defaultValue={editingActivity?.description}
+                required 
+              />
+            </div>
+
+            <div>
+              <label>Datum en tijd</label>
+              <Input 
+                name="date"
+                type="datetime-local"
+                defaultValue={editingActivity ? new Date(editingActivity.date).toISOString().slice(0, 16) : ''}
+                required 
+              />
+            </div>
+
+            <div>
+              <label>Capaciteit</label>
+              <Input 
+                name="capacity"
+                type="number"
+                defaultValue={editingActivity?.capacity}
+                required 
+              />
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => setEditingActivity(null)}>
+                Annuleren
+              </Button>
+              <Button type="submit">
+                Opslaan
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

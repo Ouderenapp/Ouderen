@@ -1,9 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { CenterCard } from "@/components/center-card";
 import { OnboardingGuide } from "@/components/onboarding-guide";
+import { RecommendedActivities } from "@/components/recommended-activities";
+import { UserPreferences } from "@/components/user-preferences";
+import { useAuth } from "@/hooks/use-auth";
 import type { Center } from "@shared/schema";
 
 export default function Home() {
+  const { user } = useAuth();
   const { data: centers, isLoading } = useQuery<Center[]>({
     queryKey: ["/api/centers"],
   });
@@ -24,6 +28,15 @@ export default function Home() {
   return (
     <div className="space-y-8">
       <OnboardingGuide />
+
+      {/* Only show recommendations and preferences for logged in users */}
+      {user && (
+        <>
+          <RecommendedActivities />
+          <UserPreferences />
+        </>
+      )}
+
       <h1 className="text-4xl font-bold">Activiteitencentra</h1>
       {centers && centers.length > 0 ? (
         <div className="grid gap-6 md:grid-cols-2">

@@ -1,8 +1,19 @@
-import { pgTable, text, serial, integer, boolean, timestamp, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, pgEnum, jsonb } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 export const roleEnum = pgEnum('role', ['user', 'center_admin']);
+
+// Add categoryEnum for activities
+export const categoryEnum = pgEnum('category', [
+  'sport',
+  'cultuur',
+  'educatie',
+  'sociaal',
+  'creatief',
+  'gezondheid',
+  'overig'
+]);
 
 // Create schema for updating activities
 export const updateActivitySchema = z.object({
@@ -17,6 +28,7 @@ export const updateActivitySchema = z.object({
   capacity: z.number().int().positive(),
   materialsNeeded: z.string().optional(),
   facilitiesAvailable: z.string().optional(),
+  category: categoryEnum
 });
 
 export const users = pgTable("users", {
@@ -29,6 +41,13 @@ export const users = pgTable("users", {
   neighborhood: text("neighborhood").notNull(),
   anonymousParticipation: boolean("anonymous_participation").notNull().default(false),
   role: roleEnum("role").notNull().default('user'),
+  // Add preferences field
+  preferences: jsonb("preferences").notNull().default({
+    categories: [],
+    interests: [],
+    mobilityNeeds: false,
+    preferredTimes: []
+  })
 });
 
 export const centers = pgTable("centers", {
@@ -51,6 +70,8 @@ export const activities = pgTable("activities", {
   capacity: integer("capacity").notNull(),
   materialsNeeded: text("materials_needed"),
   facilitiesAvailable: text("facilities_available"),
+  // Add category field
+  category: categoryEnum("category").notNull().default('overig'),
 });
 
 export const registrations = pgTable("registrations", {
