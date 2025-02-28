@@ -69,38 +69,10 @@ export default function CenterAdminPage() {
     },
   });
 
-  // Form for creating new activities
-  const activityForm = useForm({
-    resolver: zodResolver(insertActivitySchema),
-    defaultValues: {
-      name: "",
-      description: "",
-      imageUrl: "",
-      date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
-      capacity: 10,
-      centerId: center?.id,
-      materialsNeeded: "",
-      facilitiesAvailable: ""
-    },
-  });
-
-  // Creating a new activity
+  // Nieuwe activiteit aanmaken
   const createActivityMutation = useMutation({
     mutationFn: async (data: any) => {
-      if (!center?.id) {
-        throw new Error("Geen buurthuis geselecteerd");
-      }
-      const activityData = {
-        ...data,
-        centerId: center.id,
-        // Ensure date is properly formatted
-        date: new Date(data.date).toISOString()
-      };
-      const response = await apiRequest("POST", "/api/activities", activityData);
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || "Er is een fout opgetreden");
-      }
+      const response = await apiRequest("POST", "/api/activities", data);
       return response.json();
     },
     onSuccess: () => {
@@ -112,12 +84,26 @@ export default function CenterAdminPage() {
       });
     },
     onError: (error: Error) => {
-      console.error("Error creating activity:", error);
       toast({
         title: "Fout bij aanmaken activiteit",
         description: error.message,
         variant: "destructive",
       });
+    },
+  });
+
+  // Form voor nieuwe activiteiten
+  const activityForm = useForm({
+    resolver: zodResolver(insertActivitySchema),
+    defaultValues: {
+      name: "",
+      description: "",
+      imageUrl: "",
+      date: new Date().toISOString().slice(0, 16),
+      capacity: 10,
+      centerId: center?.id,
+      materialsNeeded: "",
+      facilitiesAvailable: ""
     },
   });
 
@@ -283,12 +269,13 @@ export default function CenterAdminPage() {
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Nieuwe Activiteit</h2>
         <Form {...activityForm}>
-          <form
-            onSubmit={activityForm.handleSubmit((data) =>
-              createActivityMutation.mutate(data)
-            )}
-            className="space-y-4"
-          >
+          <form onSubmit={activityForm.handleSubmit((data) => {
+            if (!center?.id) return;
+            createActivityMutation.mutate({
+              ...data,
+              centerId: center.id
+            });
+          })} className="space-y-4">
             <FormField
               control={activityForm.control}
               name="name"
@@ -394,13 +381,8 @@ export default function CenterAdminPage() {
                 </FormItem>
               )}
             />
-            <Button
-              type="submit"
-              disabled={createActivityMutation.isPending}
-            >
-              {createActivityMutation.isPending
-                ? "Bezig met aanmaken..."
-                : "Activiteit aanmaken"}
+            <Button type="submit" className="w-full">
+              {createActivityMutation.isPending ? "Bezig..." : "Activiteit aanmaken"}
             </Button>
           </form>
         </Form>
