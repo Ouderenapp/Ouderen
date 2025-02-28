@@ -3,7 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupAuth } from "./auth";
 import { log } from "./vite";
 import { initializeEmailService } from "./email";
-import { db, sql } from "./db";
+import { connectDB } from "./db";
 
 const app = express();
 app.use(express.json());
@@ -67,13 +67,13 @@ process.on('unhandledRejection', (reason, promise) => {
     console.log("Starting server initialization...");
     log("Starting server setup...");
 
-    // Test database connection
+    // Connect to MongoDB
     try {
-      await db.execute(sql`SELECT 1`);
-      console.log("Database connection successful");
-      log("Database connection verified");
+      await connectDB();
+      console.log("MongoDB connection successful");
+      log("MongoDB connection verified");
     } catch (error) {
-      console.error("Database connection failed:", error);
+      console.error("MongoDB connection failed:", error);
       process.exit(1);
     }
 
