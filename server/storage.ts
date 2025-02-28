@@ -4,7 +4,7 @@ import {
   type InsertUser, type InsertCenter, type InsertActivity, type InsertRegistration, type InsertReminder, type InsertWaitlist,
   type InsertCarpool, type InsertCarpoolPassenger
 } from "@shared/schema";
-import { db } from "./db";
+import { mongoose } from "./db";
 import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
