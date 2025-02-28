@@ -183,10 +183,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/activities", isCenterAdmin, async (req, res) => {
     console.log('Received activity data:', req.body);
 
-    // Zorg ervoor dat de datum correct wordt verwerkt
+    // Zorg ervoor dat materialsNeeded en facilitiesAvailable correct worden verwerkt
     const data = {
       ...req.body,
-      date: new Date(req.body.date),
       materialsNeeded: req.body.materialsNeeded || null,
       facilitiesAvailable: req.body.facilitiesAvailable || null
     };
