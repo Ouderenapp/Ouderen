@@ -118,11 +118,17 @@ export const insertUserSchema = createInsertSchema(users).pick({
 
 export const insertCenterSchema = createInsertSchema(centers);
 export const insertActivitySchema = createInsertSchema(activities).extend({
-  date: z.string().transform((str) => new Date(str)),
+  date: z.string()
+    .refine(str => !isNaN(Date.parse(str)), {
+      message: "Invalid date format",
+    })
+    .transform(str => new Date(str)),
   images: z.array(z.object({
     imageUrl: z.string(),
     order: z.number()
   })).optional(),
+  materialsNeeded: z.string().optional(),
+  facilitiesAvailable: z.string().optional(),
 });
 export const insertRegistrationSchema = createInsertSchema(registrations);
 

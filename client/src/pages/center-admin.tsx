@@ -33,6 +33,7 @@ export default function CenterAdminPage() {
     try {
       const formData = new FormData(e.target);
 
+      // Upload images first
       const imageUrls = await Promise.all(selectedImages.map(async (file) => {
         const imageFormData = new FormData();
         imageFormData.append('file', file);
@@ -53,12 +54,16 @@ export default function CenterAdminPage() {
         date: formData.get('date'),
         capacity: parseInt(formData.get('capacity') as string) || 10,
         centerId: center.id,
+        imageUrl: imageUrls[0] || "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3",
+        materialsNeeded: formData.get('materialsNeeded') || "",
+        facilitiesAvailable: formData.get('facilitiesAvailable') || "",
         images: imageUrls.map((url, index) => ({
           imageUrl: url,
           order: index
         }))
       };
 
+      console.log('Sending activity data:', activityData);
       const response = await fetch('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,7 +71,9 @@ export default function CenterAdminPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Kon activiteit niet aanmaken');
+        const error = await response.json();
+        console.error('Server response:', error);
+        throw new Error(error.message || 'Kon activiteit niet aanmaken');
       }
 
       queryClient.invalidateQueries({ queryKey: [`/api/activities`] });
@@ -74,9 +81,10 @@ export default function CenterAdminPage() {
       e.target.reset();
       setSelectedImages([]);
     } catch (error) {
+      console.error('Error creating activity:', error);
       toast({ 
         title: "Fout",
-        description: "Kon activiteit niet aanmaken",
+        description: error.message || "Kon activiteit niet aanmaken",
         variant: "destructive"
       });
     }
@@ -199,7 +207,14 @@ export default function CenterAdminPage() {
             <label>Capaciteit</label>
             <Input name="capacity" type="number" defaultValue="10" required />
           </div>
-
+          <div>
+            <label>Benodigde materialen</label>
+            <Textarea name="materialsNeeded" />
+          </div>
+          <div>
+            <label>Beschikbare faciliteiten</label>
+            <Textarea name="facilitiesAvailable" />
+          </div>
           <div>
             <label>Foto's</label>
             <ImageUpload

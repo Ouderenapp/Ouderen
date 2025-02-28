@@ -181,9 +181,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/activities", isCenterAdmin, async (req, res) => {
-    const result = insertActivitySchema.safeParse(req.body);
+    console.log('Received activity data:', req.body);
+
+    // Zorg ervoor dat de datum correct wordt verwerkt
+    const data = {
+      ...req.body,
+      date: new Date(req.body.date),
+      materialsNeeded: req.body.materialsNeeded || null,
+      facilitiesAvailable: req.body.facilitiesAvailable || null
+    };
+
+    const result = insertActivitySchema.safeParse(data);
+
     if (!result.success) {
-      return res.status(400).json({ message: "Ongeldige activiteit data" });
+      console.error('Validation errors:', result.error.errors);
+      return res.status(400).json({ 
+        message: "Ongeldige activiteit data",
+        errors: result.error.errors 
+      });
     }
 
     // Controleer of het centrum bij deze admin hoort
@@ -210,6 +225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
+      console.log('Activity created successfully:', activity);
       res.status(201).json(activity);
     } catch (error) {
       console.error('Error creating activity:', error);
