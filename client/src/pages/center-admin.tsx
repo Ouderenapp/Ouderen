@@ -69,16 +69,16 @@ export default function CenterAdminPage() {
     },
   });
 
-  // Form voor het aanmaken van nieuwe activiteiten
+  // The form for creating new activities
   const activityForm = useForm({
     resolver: zodResolver(insertActivitySchema),
     defaultValues: {
       name: "",
       description: "",
       imageUrl: "",
-      date: new Date().toISOString().slice(0, 16),
+      date: new Date().toISOString().slice(0, 16), // Format: YYYY-MM-DDTHH:mm
       capacity: 10,
-      centerId: center?.id || 0,
+      centerId: center?.id,
       materialsNeeded: "",
       facilitiesAvailable: ""
     },
@@ -87,20 +87,12 @@ export default function CenterAdminPage() {
   // Creating a new activity
   const createActivityMutation = useMutation({
     mutationFn: async (data: any) => {
-      if (!center?.id) {
-        throw new Error('Geen buurthuis ID gevonden');
-      }
-
+      // Ensure centerId is included in the request
       const activityData = {
         ...data,
-        centerId: center.id
+        centerId: center?.id
       };
-
       const response = await apiRequest("POST", "/api/activities", activityData);
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Er is een fout opgetreden bij het aanmaken van de activiteit');
-      }
       return response.json();
     },
     onSuccess: () => {
@@ -112,6 +104,7 @@ export default function CenterAdminPage() {
       });
     },
     onError: (error: Error) => {
+      console.error("Error creating activity:", error);
       toast({
         title: "Fout bij aanmaken activiteit",
         description: error.message,
@@ -283,17 +276,9 @@ export default function CenterAdminPage() {
         <h2 className="text-2xl font-bold">Nieuwe Activiteit</h2>
         <Form {...activityForm}>
           <form
-            onSubmit={activityForm.handleSubmit((data) => {
-              if (!center?.id) {
-                toast({
-                  title: "Fout",
-                  description: "Geen buurthuis ID gevonden. Probeer de pagina te verversen.",
-                  variant: "destructive",
-                });
-                return;
-              }
-              createActivityMutation.mutate(data);
-            })}
+            onSubmit={activityForm.handleSubmit((data) =>
+              createActivityMutation.mutate(data)
+            )}
             className="space-y-4"
           >
             <FormField
@@ -403,7 +388,7 @@ export default function CenterAdminPage() {
             />
             <Button
               type="submit"
-              disabled={createActivityMutation.isPending || !center?.id}
+              disabled={createActivityMutation.isPending}
             >
               {createActivityMutation.isPending
                 ? "Bezig met aanmaken..."

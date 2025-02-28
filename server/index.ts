@@ -8,7 +8,7 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-// Basic health check endpoint
+// Add health check endpoint
 app.get("/health", (req, res) => {
   res.send("ok");
 });
@@ -21,7 +21,6 @@ if (!process.env.SENDGRID_API_KEY) {
   log("Email service initialized");
 }
 
-// Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -52,7 +51,7 @@ app.use((req, res, next) => {
   next();
 });
 
-// Error handlers
+// Add global error handlers
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
 });
@@ -63,28 +62,26 @@ process.on('unhandledRejection', (reason, promise) => {
 
 (async () => {
   try {
-    console.log("Starting server initialization...");
     log("Starting server setup...");
+    console.log("Server initialization beginning...");
 
     // Set up authentication before routes
     setupAuth(app);
     log("Authentication setup complete");
     console.log("Authentication configured successfully");
 
-    // Register routes
     const server = await registerRoutes(app);
     log("Routes registered successfully");
     console.log("API routes registered and configured");
 
-    // Global error handler
     app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
       console.error("Server error:", err);
       const status = err.status || err.statusCode || 500;
       const message = err.message || "Internal Server Error";
+
       res.status(status).json({ message });
     });
 
-    // Setup environment-specific middleware
     if (app.get("env") === "development") {
       await setupVite(app, server);
       log("Vite setup complete");
@@ -94,13 +91,15 @@ process.on('unhandledRejection', (reason, promise) => {
       log("Static serving setup complete");
     }
 
-    // Start server
     const port = 5000;
-    server.listen(port, "0.0.0.0", () => {
+    server.listen({
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    }, () => {
       console.log(`Server started successfully on http://0.0.0.0:${port}`);
       log(`Server started successfully, serving on port ${port}`);
     });
-
   } catch (error) {
     console.error("Failed to start server:", error);
     process.exit(1);

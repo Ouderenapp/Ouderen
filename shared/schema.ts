@@ -96,6 +96,7 @@ export const insertReminderSchema = createInsertSchema(reminders);
 export const insertWaitlistSchema = createInsertSchema(waitlist);
 export const insertCarpoolSchema = createInsertSchema(carpools);
 export const insertCarpoolPassengerSchema = createInsertSchema(carpoolPassengers);
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -106,6 +107,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   anonymousParticipation: true,
   role: true,
 });
+
 export const insertCenterSchema = createInsertSchema(centers);
 export const insertActivitySchema = createInsertSchema(activities).extend({
   date: z.string().transform((str) => new Date(str)),

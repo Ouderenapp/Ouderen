@@ -4,7 +4,6 @@ import { storage } from "./storage";
 import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, insertCenterSchema, type User } from "@shared/schema";
 import { hashPassword } from "./auth";
 import { sendWelcomeEmail, sendActivityRegistrationEmail } from "./email";
-import express from "express";
 
 // Middleware om te controleren of een gebruiker een center admin is
 function isCenterAdmin(req: Request, res: Response, next: NextFunction) {
@@ -24,11 +23,6 @@ function handleError(error: any, res: Response) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-
-  // Add health check endpoint
-  app.get("/health", (req, res) => {
-    res.status(200).json({ status: "ok" });
-  });
 
   // Nieuwe route om het buurthuis van een admin op te halen
   app.get("/api/centers/my-center", async (req, res) => {
@@ -615,7 +609,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // New route to get all registrations for a center admin
+
+  // Add to the existing routes file, after the registrations routes
   app.get("/api/activities/registrations", isCenterAdmin, async (req, res) => {
     try {
       // Haal eerst het buurthuis op van de ingelogde admin
