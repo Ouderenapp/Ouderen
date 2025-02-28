@@ -26,8 +26,8 @@ export default function CenterAdminPage() {
     enabled: !!center?.id,
   });
 
-  // Simpele submit handler
-  const handleSubmit = async (e) => {
+  // Simpele submit handler voor activiteiten
+  const handleSubmitActivity = async (e) => {
     e.preventDefault();
     if (!center?.id) return;
 
@@ -67,6 +67,42 @@ export default function CenterAdminPage() {
     }
   };
 
+  // Simpele submit handler voor buurthuis aanpassen
+  const handleSubmitCenter = async (e) => {
+    e.preventDefault();
+    if (!center?.id) return;
+
+    const formData = new FormData(e.target);
+    const data = {
+      name: formData.get('name'),
+      description: formData.get('description'),
+      address: formData.get('address'),
+      imageUrl: formData.get('imageUrl') || center.imageUrl
+    };
+
+    try {
+      const response = await fetch(`/api/centers/${center.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (!response.ok) {
+        throw new Error('Kon buurthuis niet bijwerken');
+      }
+
+      // Refresh het buurthuis
+      queryClient.invalidateQueries({ queryKey: [`/api/centers/my-center`] });
+      toast({ title: "Buurthuis bijgewerkt" });
+    } catch (error) {
+      toast({ 
+        title: "Fout",
+        description: "Kon buurthuis niet bijwerken",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (isLoadingCenter || isLoadingActivities) {
     return <div>Laden...</div>;
   }
@@ -84,10 +120,55 @@ export default function CenterAdminPage() {
         </p>
       </div>
 
+      {/* Buurthuis informatie bewerken */}
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Buurthuis Informatie</h2>
+        <form onSubmit={handleSubmitCenter} className="space-y-4">
+          <div>
+            <label>Naam</label>
+            <Input 
+              name="name"
+              defaultValue={center?.name}
+              required 
+            />
+          </div>
+
+          <div>
+            <label>Adres</label>
+            <Input 
+              name="address"
+              defaultValue={center?.address}
+              required 
+            />
+          </div>
+
+          <div>
+            <label>Beschrijving</label>
+            <Textarea 
+              name="description"
+              defaultValue={center?.description}
+              required 
+            />
+          </div>
+
+          <div>
+            <label>Afbeelding URL</label>
+            <Input 
+              name="imageUrl"
+              defaultValue={center?.imageUrl}
+            />
+          </div>
+
+          <Button type="submit" className="w-full">
+            Wijzigingen opslaan
+          </Button>
+        </form>
+      </div>
+
       {/* Nieuwe activiteit aanmaken - versimpelde versie */}
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Nieuwe Activiteit</h2>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmitActivity} className="space-y-4">
           <div>
             <label>Naam</label>
             <Input name="name" required />
