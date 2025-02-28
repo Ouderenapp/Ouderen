@@ -5,11 +5,6 @@ import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, inser
 import { hashPassword } from "./auth";
 import { sendWelcomeEmail, sendActivityRegistrationEmail } from "./email";
 
-// Add health check endpoint at the top of routes
-const healthCheck = (req: Request, res: Response) => {
-  res.status(200).json({ status: 'ok' });
-};
-
 // Middleware om te controleren of een gebruiker een center admin is
 function isCenterAdmin(req: Request, res: Response, next: NextFunction) {
   if (!req.isAuthenticated() || req.user?.role !== 'center_admin') {
@@ -28,10 +23,6 @@ function handleError(error: any, res: Response) {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
-
-  // Register health check route first
-  app.get("/health", healthCheck);
-  console.log('Health check endpoint registered');
 
   // Nieuwe route om het buurthuis van een admin op te halen
   app.get("/api/centers/my-center", async (req, res) => {
@@ -642,36 +633,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(flattenedRegistrations);
     } catch (error) {
       console.error('Error getting registrations:', error);
-      res.status(500).json({ message: "Er is een fout opgetreden" });
-    }
-  });
-
-  // Add recommendation routes
-  app.get("/api/activities/recommended", async (req, res) => {
-    try {
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ message: "Niet ingelogd" });
-      }
-
-      const recommendations = await storage.getRecommendedActivities(req.user!.id);
-      res.json(recommendations);
-    } catch (error) {
-      console.error('Error getting recommendations:', error);
-      res.status(500).json({ message: "Er is een fout opgetreden" });
-    }
-  });
-
-  app.patch("/api/users/:id/preferences", async (req, res) => {
-    try {
-      const userId = parseInt(req.params.id);
-      if (!req.isAuthenticated() || req.user?.id !== userId) {
-        return res.status(403).json({ message: "Geen toegang" });
-      }
-
-      const user = await storage.updateUserPreferences(userId, req.body);
-      res.json(user);
-    } catch (error) {
-      console.error('Error updating preferences:', error);
       res.status(500).json({ message: "Er is een fout opgetreden" });
     }
   });

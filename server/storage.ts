@@ -5,7 +5,7 @@ import {
   type InsertCarpool, type InsertCarpoolPassenger
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -57,10 +57,6 @@ export interface IStorage {
   addPassenger(passenger: InsertCarpoolPassenger): Promise<CarpoolPassenger>;
   removePassenger(carpoolId: number, passengerId: number): Promise<void>;
   getCarpoolPassengers(carpoolId: number): Promise<User[]>;
-
-  // Add new method for recommendations
-  getRecommendedActivities(userId: number): Promise<Activity[]>;
-  updateUserPreferences(userId: number, preferences: any): Promise<User>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -258,7 +254,7 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async updateUser(id: number, data: {
+  async updateUser(id: number, data: { 
     anonymousParticipation?: boolean,
     displayName?: string,
     phone?: string,
@@ -459,48 +455,6 @@ export class DatabaseStorage implements IStorage {
       return users.filter((user): user is User => user !== undefined);
     } catch (error) {
       console.error('Error in getCarpoolPassengers:', error);
-      throw error;
-    }
-  }
-
-  async getRecommendedActivities(userId: number): Promise<Activity[]> {
-    try {
-      // Get user preferences
-      const user = await this.getUser(userId);
-      if (!user) return [];
-
-      // Get user's past registrations
-      const userRegistrations = await this.getRegistrationsByUser(userId);
-      const pastActivityIds = userRegistrations.map(r => r.activityId);
-
-      // Get activities from the same categories as user's preferences and past activities
-      const recommendedActivities = await db.select()
-        .from(activities)
-        .where(
-          sql`${activities.date} > NOW() AND 
-              ${activities.id} NOT IN (${sql.join(pastActivityIds)}) AND
-              (${activities.category} = ANY(${user.preferences.categories}))`
-        )
-        .orderBy(activities.date)
-        .limit(5);
-
-      return recommendedActivities;
-    } catch (error) {
-      console.error('Error in getRecommendedActivities:', error);
-      return [];
-    }
-  }
-
-  async updateUserPreferences(userId: number, preferences: any): Promise<User> {
-    try {
-      const [user] = await db
-        .update(users)
-        .set({ preferences })
-        .where(eq(users.id, userId))
-        .returning();
-      return user;
-    } catch (error) {
-      console.error('Error in updateUserPreferences:', error);
       throw error;
     }
   }
