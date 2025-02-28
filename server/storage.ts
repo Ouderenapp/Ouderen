@@ -1,8 +1,8 @@
 import {
-  users, centers, activities, registrations, reminders, waitlist, carpools, carpoolPassengers,
+  users, centers, activities, registrations, reminders, waitlist, carpools, carpoolPassengers, activityImages,
   type User, type Center, type Activity, type Registration, type Reminder, type Waitlist, type Carpool, type CarpoolPassenger,
   type InsertUser, type InsertCenter, type InsertActivity, type InsertRegistration, type InsertReminder, type InsertWaitlist,
-  type InsertCarpool, type InsertCarpoolPassenger
+  type InsertCarpool, type InsertCarpoolPassenger, type ActivityImage, type InsertActivityImage
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and } from "drizzle-orm";
@@ -57,6 +57,11 @@ export interface IStorage {
   addPassenger(passenger: InsertCarpoolPassenger): Promise<CarpoolPassenger>;
   removePassenger(carpoolId: number, passengerId: number): Promise<void>;
   getCarpoolPassengers(carpoolId: number): Promise<User[]>;
+
+  // Activity Images
+  createActivityImage(image: InsertActivityImage): Promise<ActivityImage>;
+  getActivityImages(activityId: number): Promise<ActivityImage[]>;
+  deleteActivityImage(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -455,6 +460,39 @@ export class DatabaseStorage implements IStorage {
       return users.filter((user): user is User => user !== undefined);
     } catch (error) {
       console.error('Error in getCarpoolPassengers:', error);
+      throw error;
+    }
+  }
+
+  // Activity Images methods
+  async createActivityImage(image: InsertActivityImage): Promise<ActivityImage> {
+    try {
+      const [newImage] = await db.insert(activityImages).values(image).returning();
+      return newImage;
+    } catch (error) {
+      console.error('Error in createActivityImage:', error);
+      throw error;
+    }
+  }
+
+  async getActivityImages(activityId: number): Promise<ActivityImage[]> {
+    try {
+      return await db
+        .select()
+        .from(activityImages)
+        .where(eq(activityImages.activityId, activityId))
+        .orderBy(activityImages.order);
+    } catch (error) {
+      console.error('Error in getActivityImages:', error);
+      throw error;
+    }
+  }
+
+  async deleteActivityImage(id: number): Promise<void> {
+    try {
+      await db.delete(activityImages).where(eq(activityImages.id, id));
+    } catch (error) {
+      console.error('Error in deleteActivityImage:', error);
       throw error;
     }
   }

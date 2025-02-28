@@ -8,56 +8,71 @@ import { Textarea } from "@/components/ui/textarea";
 import { ActivityCard } from "@/components/activity-card";
 import { queryClient } from "@/lib/queryClient";
 import { useState } from "react";
+import { ImageUpload } from "@/components/image-upload";
 
 export default function CenterAdminPage() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [editingActivity, setEditingActivity] = useState(null);
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
 
-  // Direct het buurthuis ophalen voor de ingelogde admin
   const { data: center, isLoading: isLoadingCenter } = useQuery<Center>({
     queryKey: [`/api/centers/my-center`],
     enabled: !!user?.id && user?.role === 'center_admin',
   });
 
-  // Activiteiten ophalen voor dit buurthuis
   const { data: activities, isLoading: isLoadingActivities } = useQuery<Activity[]>({
     queryKey: [`/api/activities`, { centerId: center?.id }],
     enabled: !!center?.id,
   });
 
-  // Simpele submit handler voor activiteiten
   const handleSubmitActivity = async (e) => {
     e.preventDefault();
     if (!center?.id) return;
 
-    const formData = new FormData(e.target);
-    const data = {
-      name: formData.get('name'),
-      description: formData.get('description'),
-      date: formData.get('date'),
-      capacity: parseInt(formData.get('capacity') as string) || 10,
-      centerId: center.id,
-      imageUrl: "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"
-    };
-
     try {
+      const formData = new FormData(e.target);
+
+      const imageUrls = await Promise.all(selectedImages.map(async (file) => {
+        const imageFormData = new FormData();
+        imageFormData.append('file', file);
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: imageFormData
+        });
+
+        if (!response.ok) throw new Error('Kon afbeelding niet uploaden');
+        const data = await response.json();
+        return data.url;
+      }));
+
+      const activityData = {
+        name: formData.get('name'),
+        description: formData.get('description'),
+        date: formData.get('date'),
+        capacity: parseInt(formData.get('capacity') as string) || 10,
+        centerId: center.id,
+        images: imageUrls.map((url, index) => ({
+          imageUrl: url,
+          order: index
+        }))
+      };
+
       const response = await fetch('/api/activities', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
+        body: JSON.stringify(activityData)
       });
 
       if (!response.ok) {
         throw new Error('Kon activiteit niet aanmaken');
       }
 
-      // Refresh de activiteiten lijst
       queryClient.invalidateQueries({ queryKey: [`/api/activities`] });
       toast({ title: "Activiteit aangemaakt" });
-
-      // Reset het formulier
       e.target.reset();
+      setSelectedImages([]);
     } catch (error) {
       toast({ 
         title: "Fout",
@@ -67,7 +82,6 @@ export default function CenterAdminPage() {
     }
   };
 
-  // Simpele submit handler voor buurthuis aanpassen
   const handleSubmitCenter = async (e) => {
     e.preventDefault();
     if (!center?.id) return;
@@ -91,7 +105,6 @@ export default function CenterAdminPage() {
         throw new Error('Kon buurthuis niet bijwerken');
       }
 
-      // Refresh het buurthuis
       queryClient.invalidateQueries({ queryKey: [`/api/centers/my-center`] });
       toast({ title: "Buurthuis bijgewerkt" });
     } catch (error) {
@@ -120,7 +133,6 @@ export default function CenterAdminPage() {
         </p>
       </div>
 
-      {/* Buurthuis informatie bewerken */}
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Buurthuis Informatie</h2>
         <form onSubmit={handleSubmitCenter} className="space-y-4">
@@ -165,7 +177,6 @@ export default function CenterAdminPage() {
         </form>
       </div>
 
-      {/* Nieuwe activiteit aanmaken - versimpelde versie */}
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Nieuwe Activiteit</h2>
         <form onSubmit={handleSubmitActivity} className="space-y-4">
@@ -189,13 +200,22 @@ export default function CenterAdminPage() {
             <Input name="capacity" type="number" defaultValue="10" required />
           </div>
 
+          <div>
+            <label>Foto's</label>
+            <ImageUpload
+              onImagesSelected={(files) => setSelectedImages(files)}
+              onRemoveImage={(index) => {
+                setSelectedImages(prev => prev.filter((_, i) => i !== index));
+              }}
+            />
+          </div>
+
           <Button type="submit" className="w-full">
             Activiteit aanmaken
           </Button>
         </form>
       </div>
 
-      {/* Bestaande activiteiten */}
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Huidige Activiteiten</h2>
         <div className="grid gap-6 md:grid-cols-2">

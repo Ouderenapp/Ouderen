@@ -4,6 +4,10 @@ import { storage } from "./storage";
 import { insertUserSchema, insertRegistrationSchema, insertActivitySchema, insertCenterSchema, type User } from "@shared/schema";
 import { hashPassword } from "./auth";
 import { sendWelcomeEmail, sendActivityRegistrationEmail } from "./email";
+import multer from "multer";
+import path from "path";
+import { mkdir } from "fs/promises";
+import express from "express";
 
 // Middleware om te controleren of een gebruiker een center admin is
 function isCenterAdmin(req: Request, res: Response, next: NextFunction) {
@@ -21,8 +25,45 @@ function handleError(error: any, res: Response) {
   res.status(status).json({ message });
 }
 
+const UPLOAD_DIR = path.join(process.cwd(), "public", "uploads");
+const storageMulter = multer.diskStorage({
+  destination: async function (req, file, cb) {
+    try {
+      await mkdir(UPLOAD_DIR, { recursive: true });
+      cb(null, UPLOAD_DIR);
+    } catch (error) {
+      console.error('Error creating upload directory:', error);
+      cb(error as Error, UPLOAD_DIR);
+    }
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ storage: storageMulter });
+
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+
+  // Eerste route: health check
+  app.get('/health', (req, res) => {
+    res.json({ status: 'ok' });
+  });
+
+  // Serve static files from the uploads directory
+  app.use('/uploads', express.static(path.join(process.cwd(), 'public', 'uploads')));
+
+  // File upload endpoint - moet voor andere routes komen
+  app.post("/api/upload", upload.single('file'), (req, res) => {
+    if (!req.file) {
+      return res.status(400).json({ message: "Geen bestand geüpload" });
+    }
+    console.log('File uploaded:', req.file);
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.json({ url: fileUrl });
+  });
 
   // Nieuwe route om het buurthuis van een admin op te halen
   app.get("/api/centers/my-center", async (req, res) => {
@@ -151,8 +192,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).json({ message: "U heeft geen rechten om activiteiten toe te voegen aan dit buurthuis" });
     }
 
-    const activity = await storage.createActivity(result.data);
-    res.status(201).json(activity);
+    try {
+      // Create the activity
+      const activity = await storage.createActivity({
+        ...result.data,
+        imageUrl: result.data.images?.[0]?.imageUrl || "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3"
+      });
+
+      // Store additional images if provided
+      if (result.data.images?.length) {
+        for (const image of result.data.images) {
+          await storage.createActivityImage({
+            activityId: activity.id,
+            imageUrl: image.imageUrl,
+            order: image.order
+          });
+        }
+      }
+
+      res.status(201).json(activity);
+    } catch (error) {
+      console.error('Error creating activity:', error);
+      res.status(500).json({ message: "Er is een fout opgetreden bij het aanmaken van de activiteit" });
+    }
   });
 
   app.put("/api/activities/:id", isCenterAdmin, async (req, res) => {

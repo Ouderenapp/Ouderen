@@ -4,6 +4,14 @@ import { z } from "zod";
 
 export const roleEnum = pgEnum('role', ['user', 'center_admin']);
 
+// Add images table for activities
+export const activityImages = pgTable("activity_images", {
+  id: serial("id").primaryKey(),
+  activityId: integer("activity_id").notNull(),
+  imageUrl: text("image_url").notNull(),
+  order: integer("order").notNull().default(0),
+});
+
 // Create schema for updating activities
 export const updateActivitySchema = z.object({
   name: z.string().min(3),
@@ -111,6 +119,10 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const insertCenterSchema = createInsertSchema(centers);
 export const insertActivitySchema = createInsertSchema(activities).extend({
   date: z.string().transform((str) => new Date(str)),
+  images: z.array(z.object({
+    imageUrl: z.string(),
+    order: z.number()
+  })).optional(),
 });
 export const insertRegistrationSchema = createInsertSchema(registrations);
 
@@ -132,3 +144,7 @@ export type Reminder = typeof reminders.$inferSelect;
 export type Waitlist = typeof waitlist.$inferSelect;
 export type Carpool = typeof carpools.$inferSelect;
 export type CarpoolPassenger = typeof carpoolPassengers.$inferSelect;
+
+// Add type for activity images
+export type ActivityImage = typeof activityImages.$inferSelect;
+export type InsertActivityImage = typeof activityImages.$inferInsert;
