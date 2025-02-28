@@ -1,65 +1,106 @@
-import mongoose from 'mongoose';
+
 import { z } from 'zod';
+import { sql } from 'drizzle-orm';
+import { integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 
-// Schema definitions
-const userSchema = new mongoose.Schema({
-  username: { type: String, required: true, unique: true },
-  password: { type: String, required: true },
-  displayName: { type: String, required: true },
-  phone: { type: String, required: true },
-  village: { type: String, required: true },
-  neighborhood: { type: String, required: true },
-  anonymousParticipation: { type: Boolean, default: false },
-  role: { type: String, enum: ['user', 'center_admin'], default: 'user' }
+// Define tables for Drizzle ORM
+export const users = sqliteTable('users', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  username: text('username').notNull().unique(),
+  password: text('password').notNull(),
+  displayName: text('display_name').notNull(),
+  phone: text('phone').notNull(),
+  village: text('village').notNull(),
+  neighborhood: text('neighborhood').notNull(),
+  anonymousParticipation: integer('anonymous_participation', { mode: 'boolean' }).default(false),
+  role: text('role', { enum: ['user', 'center_admin'] }).default('user')
 });
 
-const centerSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  address: { type: String, required: true },
-  description: { type: String, required: true },
-  imageUrl: { type: String, required: true },
-  adminId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-  village: { type: String, required: true }
+export const centers = sqliteTable('centers', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  name: text('name').notNull(),
+  address: text('address').notNull(),
+  description: text('description').notNull(),
+  imageUrl: text('image_url').notNull(),
+  adminId: integer('admin_id').notNull().references(() => users.id),
+  village: text('village').notNull()
 });
 
-const activitySchema = new mongoose.Schema({
-  centerId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Center' },
-  name: { type: String, required: true },
-  description: { type: String, required: true },
-  imageUrl: { type: String, required: true },
-  date: { type: Date, required: true },
-  capacity: { type: Number, required: true },
-  materialsNeeded: String,
-  facilitiesAvailable: String
+export const activities = sqliteTable('activities', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  centerId: integer('center_id').notNull().references(() => centers.id),
+  name: text('name').notNull(),
+  description: text('description').notNull(),
+  imageUrl: text('image_url').notNull(),
+  date: text('date').notNull(), // Store as ISO string
+  capacity: integer('capacity').notNull(),
+  materialsNeeded: text('materials_needed'),
+  facilitiesAvailable: text('facilities_available')
 });
 
-const registrationSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-  activityId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Activity' }
+export const registrations = sqliteTable('registrations', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id),
+  activityId: integer('activity_id').notNull().references(() => activities.id)
+}, (t) => ({
+  userActivityIndex: primaryKey({ columns: [t.userId, t.activityId] })
+}));
+
+export const reminders = sqliteTable('reminders', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id),
+  activityId: integer('activity_id').notNull().references(() => activities.id),
+  reminderDate: text('reminder_date').notNull(), // Store as ISO string
+  title: text('title').notNull(),
+  message: text('message').notNull(),
+  isRead: integer('is_read', { mode: 'boolean' }).default(false)
 });
 
-const waitlistSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-  activityId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Activity' },
-  registrationDate: { type: Date, default: Date.now }
+export const waitlist = sqliteTable('waitlist', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  userId: integer('user_id').notNull().references(() => users.id),
+  activityId: integer('activity_id').notNull().references(() => activities.id),
+  registrationDate: text('registration_date').default(sql`CURRENT_TIMESTAMP`)
+}, (t) => ({
+  userActivityIndex: primaryKey({ columns: [t.userId, t.activityId] })
+}));
+
+export const carpools = sqliteTable('carpools', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  driverId: integer('driver_id').notNull().references(() => users.id),
+  activityId: integer('activity_id').notNull().references(() => activities.id),
+  departureTime: text('departure_time').notNull(),
+  departureLocation: text('departure_location').notNull(),
+  capacity: integer('capacity').notNull()
 });
 
-const reminderSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'User' },
-  activityId: { type: mongoose.Schema.Types.ObjectId, required: true, ref: 'Activity' },
-  reminderDate: { type: Date, required: true },
-  title: { type: String, required: true },
-  message: { type: String, required: true },
-  isRead: { type: Boolean, default: false }
-});
+export const carpoolPassengers = sqliteTable('carpool_passengers', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  carpoolId: integer('carpool_id').notNull().references(() => carpools.id),
+  passengerId: integer('passenger_id').notNull().references(() => users.id)
+}, (t) => ({
+  carpoolPassengerIndex: primaryKey({ columns: [t.carpoolId, t.passengerId] })
+}));
 
-// Models
-export const User = mongoose.model('User', userSchema);
-export const Center = mongoose.model('Center', centerSchema);
-export const Activity = mongoose.model('Activity', activitySchema);
-export const Registration = mongoose.model('Registration', registrationSchema);
-export const Waitlist = mongoose.model('Waitlist', waitlistSchema);
-export const Reminder = mongoose.model('Reminder', reminderSchema);
+// Types based on the tables
+export type User = typeof users.$inferSelect;
+export type Center = typeof centers.$inferSelect;
+export type Activity = typeof activities.$inferSelect;
+export type Registration = typeof registrations.$inferSelect;
+export type Reminder = typeof reminders.$inferSelect;
+export type Waitlist = typeof waitlist.$inferSelect;
+export type Carpool = typeof carpools.$inferSelect;
+export type CarpoolPassenger = typeof carpoolPassengers.$inferSelect;
+
+// Types for inserts
+export type InsertUser = typeof users.$inferInsert;
+export type InsertCenter = typeof centers.$inferInsert;
+export type InsertActivity = typeof activities.$inferInsert;
+export type InsertRegistration = typeof registrations.$inferInsert;
+export type InsertReminder = typeof reminders.$inferInsert;
+export type InsertWaitlist = typeof waitlist.$inferInsert;
+export type InsertCarpool = typeof carpools.$inferInsert;
+export type InsertCarpoolPassenger = typeof carpoolPassengers.$inferInsert;
 
 // Zod schemas for validation
 export const insertUserSchema = z.object({
@@ -77,28 +118,23 @@ export const insertCenterSchema = z.object({
   name: z.string(),
   address: z.string(),
   description: z.string(),
-  imageUrl: z.string().url(),
-  adminId: z.string(),
+  imageUrl: z.string(),
+  adminId: z.number(),
   village: z.string()
 });
 
 export const insertActivitySchema = z.object({
-  centerId: z.string(),
+  centerId: z.number(),
   name: z.string(),
   description: z.string(),
-  imageUrl: z.string().url(),
-  date: z.string().transform(str => new Date(str)),
+  imageUrl: z.string(),
+  date: z.string(),
   capacity: z.number().int().positive(),
   materialsNeeded: z.string().optional(),
   facilitiesAvailable: z.string().optional()
 });
 
 export const insertRegistrationSchema = z.object({
-  userId: z.string(),
-  activityId: z.string()
+  userId: z.number(),
+  activityId: z.number()
 });
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type InsertCenter = z.infer<typeof insertCenterSchema>;
-export type InsertActivity = z.infer<typeof insertActivitySchema>;
-export type InsertRegistration = z.infer<typeof insertRegistrationSchema>;
