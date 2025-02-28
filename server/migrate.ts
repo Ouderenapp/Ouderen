@@ -1,4 +1,3 @@
-
 import { db } from "./db";
 import { reminders, users, centers, activities, registrations } from "@shared/schema";
 import { sql } from "drizzle-orm";
@@ -113,9 +112,6 @@ async function migrate() {
     console.log("Migration completed successfully!");
   } catch (error) {
     console.error("Migration failed:", error);
-  } finally {
-    // Close the database connection pool
-    await db.pool.end();
   }
 }
 

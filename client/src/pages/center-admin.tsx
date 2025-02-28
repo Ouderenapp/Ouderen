@@ -70,10 +70,10 @@ export default function CenterAdminPage() {
         body: JSON.stringify(activityData)
       });
 
-      if (!response.ok) {
-        const error = await response.json();
-        console.error('Server response:', error);
-        throw new Error(error.message || 'Kon activiteit niet aanmaken');
+      const responseData = await response.json();
+
+      if (!response.ok && responseData.message) {
+        throw new Error(responseData.message);
       }
 
       queryClient.invalidateQueries({ queryKey: [`/api/activities`] });
@@ -81,12 +81,13 @@ export default function CenterAdminPage() {
       e.target.reset();
       setSelectedImages([]);
     } catch (error) {
-      console.error('Error creating activity:', error);
-      toast({ 
-        title: "Fout",
-        description: error.message || "Kon activiteit niet aanmaken",
-        variant: "destructive"
-      });
+      if (error instanceof Error && error.message) {
+        toast({ 
+          title: "Fout",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     }
   };
 
