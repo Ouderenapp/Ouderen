@@ -101,11 +101,11 @@ export default function AuthPage() {
         <div className="flex flex-col justify-center space-y-6">
           <div className="flex flex-col items-center mb-4">
             <img 
-              src="/images/buurtconnect-logo.svg" 
-              alt="BuurtConnect Logo" 
-              className="h-20 mb-4" 
+              src="/images/samenactief-logo.svg" 
+              alt="SamenActief Logo" 
+              className="w-64 mx-auto mb-8" 
             />
-            <h1 className="text-4xl font-bold">Welkom bij BuurtConnect</h1>
+            <h1 className="text-4xl font-bold">Welkom bij SamenActief</h1>
             <p className="mt-2 text-xl text-muted-foreground">
               Meld u aan om deel te nemen aan activiteiten of beheer uw buurthuis
             </p>
