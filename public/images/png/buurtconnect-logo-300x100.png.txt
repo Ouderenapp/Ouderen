@@ -1,0 +1,12 @@
+Dit is een plaatshouder voor het PNG-bestand "buurtconnect-logo-300x100.png".
+
+Je kunt dit bestand genereren door de volgende stappen te volgen:
+
+1. Open het SVG-bestand "buurtconnect-logo.svg" in een webbrowser (Chrome, Firefox, Edge, etc.)
+2. Rechtsklik op de afbeelding en kies "Afbeelding opslaan als..."
+3. Sla het op als PNG met de naam "buurtconnect-logo-300x100.png"
+4. Voor optimale kwaliteit, stel de breedte in op 300 pixels
+
+Als je deze afbeelding voor een presentatie of document nodig hebt, kun je ook de high-resolution versie maken door de breedte in te stellen op 1200 pixels en op te slaan als "buurtconnect-logo-1200x400.png".
+
+Dit bestand kun je verwijderen nadat je de PNG-bestanden hebt aangemaakt. 

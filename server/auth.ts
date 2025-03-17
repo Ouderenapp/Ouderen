@@ -6,7 +6,8 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as SelectUser } from "@shared/schema";
-import MongoStore from "connect-mongo";
+import pgSession from "connect-pg-simple";
+import { pool } from "./db";
 
 declare global {
   namespace Express {
@@ -30,10 +31,11 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  const sessionStore = MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI,
-    collectionName: 'sessions',
-    ttl: 14 * 24 * 60 * 60, // 14 days
+  const PgStore = pgSession(session);
+  
+  const sessionStore = new PgStore({
+    pool: pool,
+    tableName: 'user_sessions'
   });
 
   const sessionSettings: session.SessionOptions = {

@@ -1,0 +1,9 @@
+Dit is een placeholder bestand voor buurtconnect-icon-400x400.png
+
+Om het daadwerkelijke PNG-bestand te genereren:
+1. Open het bestand generate_png_bestanden.html in je browser
+2. Klik op de knop "Genereer PNG Bestanden"
+3. Download het bestand buurtconnect-icon-400x400.png
+4. Vervang dit tekstbestand door het gedownloade PNG-bestand
+
+Of gebruik een online tool zoals https://svgtopng.com/ om het SVG-bestand om te zetten naar PNG. 

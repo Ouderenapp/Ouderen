@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'nl.buurtactiviteiten.app',
-  appName: 'Buurtactiviteiten',
+  appId: 'nl.buurtconnect.app',
+  appName: 'BuurtConnect',
   webDir: 'dist',
   server: {
     androidScheme: 'https'

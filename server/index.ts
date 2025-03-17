@@ -94,10 +94,9 @@ process.on('unhandledRejection', (reason, promise) => {
     const port = 5000;
     server.listen({
       port,
-      host: "0.0.0.0",
-      reusePort: true,
+      host: "localhost"
     }, () => {
-      console.log(`Server started successfully on http://0.0.0.0:${port}`);
+      console.log(`Server started successfully on http://localhost:${port}`);
       log(`Server started successfully, serving on port ${port}`);
     });
   } catch (error) {

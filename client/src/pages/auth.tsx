@@ -99,8 +99,13 @@ export default function AuthPage() {
     <div className="container mx-auto flex min-h-screen items-center justify-center px-4 py-8">
       <div className="grid w-full gap-8 lg:grid-cols-2">
         <div className="flex flex-col justify-center space-y-6">
-          <div>
-            <h1 className="text-4xl font-bold">Welkom bij het Activiteitencentrum</h1>
+          <div className="flex flex-col items-center mb-4">
+            <img 
+              src="/images/buurtconnect-logo.svg" 
+              alt="BuurtConnect Logo" 
+              className="h-20 mb-4" 
+            />
+            <h1 className="text-4xl font-bold">Welkom bij BuurtConnect</h1>
             <p className="mt-2 text-xl text-muted-foreground">
               Meld u aan om deel te nemen aan activiteiten of beheer uw buurthuis
             </p>
@@ -394,8 +399,8 @@ export default function AuthPage() {
 
         <div className="hidden lg:block">
           <img
-            src="https://images.unsplash.com/photo-1574871786514-46e1680ea587"
-            alt="Senioren die samen activiteiten doen"
+            src="https://images.unsplash.com/photo-1517292987719-0369a794ec0f"
+            alt="Ouderen die samen activiteiten doen in de buurt"
             className="h-full w-full rounded-lg object-cover"
           />
         </div>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BuurtConnect PNG Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        h1, h2, h3 {
+            color: #3185fc;
+        }
+        .step {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background-color: #f9f9f9;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #3185fc;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #5b7fff;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e0f7e0;
+            border-left: 4px solid #4caf50;
+            display: none;
+        }
+        .download-link {
+            display: inline-block;
+            margin: 10px 0;
+            padding: 8px 12px;
+            background-color: #4caf50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        canvas {
+            display: none;
+        }
+        .vercel-notice {
+            margin-top: 30px;
+            padding: 15px;
+            background-color: #f0f7ff;
+            border-left: 4px solid #3185fc;
+        }
+        code {
+            background-color: #f1f1f1;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        .examples {
+            background-color: #f8f8f8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>BuurtConnect PNG Generator</h1>
+    
+    <div class="step">
+        <h2>Stap 1: Genereer PNG-bestanden</h2>
+        <p>Klik op de knop hieronder om automatisch de PNG-bestanden te genereren op basis van de SVG-bestanden.</p>
+        <button id="generateBtn">Genereer PNG Bestanden</button>
+        <div id="result" class="result">
+            <h3>PNG Bestanden zijn gegenereerd!</h3>
+            <p>De volgende bestanden zijn klaar om te downloaden:</p>
+            <div id="downloadLinks"></div>
+        </div>
+    </div>
+    
+    <div class="step">
+        <h2>Stap 2: Download de bestanden</h2>
+        <p>Nadat je op "Genereer PNG Bestanden" hebt geklikt, verschijnen hier downloadlinks. Klik op elke link om het bestand te downloaden en sla het op in deze map.</p>
+    </div>
+    
+    <div class="step">
+        <h2>Stap 3: Gebruik de PNG bestanden</h2>
+        <p>Na het downloaden kun je de PNG-bestanden direct gebruiken in je presentaties, documenten of andere toepassingen.</p>
+        
+        <div class="examples">
+            <h3>Voorbeeld HTML:</h3>
+            <pre>&lt;img src="/images/png-bestanden/buurtconnect-logo-300x100.png" alt="BuurtConnect" /&gt;</pre>
+            
+            <h3>Voorbeeld React:</h3>
+            <pre>import Logo from '/images/png-bestanden/buurtconnect-logo-300x100.png';
+
+function Header() {
+  return &lt;img src={Logo} alt="BuurtConnect" /&gt;;
+}</pre>
+        </div>
+    </div>
+    
+    <div class="vercel-notice">
+        <h2>Gebruik op Vercel</h2>
+        <p>Voor gebruik op Vercel hosting:</p>
+        <ol>
+            <li>Zorg dat de PNG-bestanden in de <code>public/images/png-bestanden/</code> map staan</li>
+            <li>Gebruik absolute paden vanaf de root: <code>/images/png-bestanden/buurtconnect-logo-300x100.png</code></li>
+            <li>Bij gebruik van Next.js, overweeg het Next/Image component te gebruiken voor optimalisatie</li>
+        </ol>
+        <p>Zie <code>vercel-info.md</code> in deze map voor meer details en probleemoplossing.</p>
+    </div>
+
+    <!-- Onzichtbare afbeeldingen en canvas voor conversie -->
+    <div style="display:none">
+        <img id="fullLogo" src="../buurtconnect-logo.svg" crossorigin="anonymous">
+        <img id="iconOnly" src="../buurtconnect-icon.svg" crossorigin="anonymous">
+        <canvas id="canvas"></canvas>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const generateBtn = document.getElementById('generateBtn');
+            const result = document.getElementById('result');
+            const downloadLinks = document.getElementById('downloadLinks');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const fullLogo = document.getElementById('fullLogo');
+            const iconOnly = document.getElementById('iconOnly');
+            
+            // Wacht tot de afbeeldingen zijn geladen
+            fullLogo.onload = iconOnly.onload = function() {
+                generateBtn.disabled = false;
+            };
+            
+            generateBtn.addEventListener('click', function() {
+                // Genereer de PNG-bestanden
+                generatePNGs();
+                
+                // Toon het resultaat
+                result.style.display = 'block';
+                
+                // Scroll naar het resultaat
+                result.scrollIntoView({ behavior: 'smooth' });
+            });
+            
+            function generatePNGs() {
+                // Maak de downloadlinks leeg
+                downloadLinks.innerHTML = '';
+                
+                // Genereer de PNG-bestanden
+                generatePNG(fullLogo, 300, 100, 'buurtconnect-logo-300x100.png');
+                generatePNG(fullLogo, 1200, 400, 'buurtconnect-logo-1200x400.png');
+                generatePNG(iconOnly, 100, 100, 'buurtconnect-icon-100x100.png');
+                generatePNG(iconOnly, 400, 400, 'buurtconnect-icon-400x400.png');
+            }
+            
+            function generatePNG(img, width, height, filename) {
+                // Stel de canvas grootte in
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Wis de canvas
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, width, height);
+                
+                // Teken de afbeelding op de canvas
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Converteer de canvas naar een PNG
+                try {
+                    const dataURL = canvas.toDataURL('image/png');
+                    
+                    // Maak een downloadlink
+                    const link = document.createElement('a');
+                    link.href = dataURL;
+                    link.download = filename;
+                    link.textContent = filename;
+                    link.className = 'download-link';
+                    
+                    // Voeg de link toe aan de downloadlinks
+                    downloadLinks.appendChild(link);
+                    downloadLinks.appendChild(document.createElement('br'));
+                } catch(e) {
+                    console.error('Fout bij het genereren van PNG:', e);
+                    alert('Er is een fout opgetreden bij het genereren van de PNG. Dit kan gebeuren vanwege beveiligingsbeperkingen in je browser. Probeer de methoden in de README.md om de PNG handmatig te maken.');
+                }
+            }
+        });
+    </script>
+</body>
+</html> 

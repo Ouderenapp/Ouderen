@@ -36,7 +36,7 @@ export default function Navigation() {
         <div className="lg:hidden flex flex-col py-4">
           <div className="flex items-center justify-between mb-4">
             <Link href="/">
-              <span className="text-xl font-bold cursor-pointer">Buurtactiviteiten</span>
+              <span className="text-xl font-bold cursor-pointer">BuurtConnect</span>
             </Link>
             <div className="flex items-center space-x-2">
               <TooltipProvider>
@@ -108,6 +108,9 @@ export default function Navigation() {
         {/* Desktop navigatie */}
         <div className="hidden lg:flex h-16 items-center justify-between">
           <div className="flex items-center space-x-8">
+            <Link href="/">
+              <span className="text-xl font-bold cursor-pointer mr-4">BuurtConnect</span>
+            </Link>
             {links.map(({ href, label, icon: Icon }) => (
               <Link key={href} href={href}>
                 <div

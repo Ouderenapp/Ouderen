@@ -1,0 +1,14 @@
+BuurtConnect Logo - PNG Bestanden
+
+Deze map bevat de PNG-versies van het BuurtConnect logo, klaar voor gebruik.
+
+Beschikbare bestanden:
+1. buurtconnect-logo-300x100.png - Het volledige logo met tekst (300px breed)
+2. buurtconnect-logo-1200x400.png - Het volledige logo met tekst in hoge resolutie (1200px breed)
+3. buurtconnect-icon-100x100.png - Alleen het icoon zonder tekst (100px)
+4. buurtconnect-icon-400x400.png - Alleen het icoon zonder tekst in hoge resolutie (400px)
+
+Deze PNG-bestanden kunnen direct worden gebruikt in presentaties, documenten of andere toepassingen.
+
+Als je het originele SVG-bestand nodig hebt (vector formaat dat oneindig schaalbaar is),
+kun je deze vinden in de hoofdmap: /images/buurtconnect-logo.svg en /images/buurtconnect-icon.svg 
