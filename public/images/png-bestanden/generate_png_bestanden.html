@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BuurtConnect PNG Generator</title>
+    <title>SamenActief PNG Generator</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -54,12 +54,6 @@
         canvas {
             display: none;
         }
-        .vercel-notice {
-            margin-top: 30px;
-            padding: 15px;
-            background-color: #f0f7ff;
-            border-left: 4px solid #3185fc;
-        }
         code {
             background-color: #f1f1f1;
             padding: 2px 5px;
@@ -76,7 +70,7 @@
     </style>
 </head>
 <body>
-    <h1>BuurtConnect PNG Generator</h1>
+    <h1>SamenActief PNG Generator</h1>
     
     <div class="step">
         <h2>Stap 1: Genereer PNG-bestanden</h2>
@@ -100,32 +94,21 @@
         
         <div class="examples">
             <h3>Voorbeeld HTML:</h3>
-            <pre>&lt;img src="/images/png-bestanden/buurtconnect-logo-300x100.png" alt="BuurtConnect" /&gt;</pre>
+            <pre>&lt;img src="/images/png-bestanden/samenactief-logo-300x100.png" alt="SamenActief" /&gt;</pre>
             
             <h3>Voorbeeld React:</h3>
-            <pre>import Logo from '/images/png-bestanden/buurtconnect-logo-300x100.png';
+            <pre>import Logo from '/images/png-bestanden/samenactief-logo-300x100.png';
 
 function Header() {
-  return &lt;img src={Logo} alt="BuurtConnect" /&gt;;
+  return &lt;img src={Logo} alt="SamenActief" /&gt;;
 }</pre>
         </div>
-    </div>
-    
-    <div class="vercel-notice">
-        <h2>Gebruik op Vercel</h2>
-        <p>Voor gebruik op Vercel hosting:</p>
-        <ol>
-            <li>Zorg dat de PNG-bestanden in de <code>public/images/png-bestanden/</code> map staan</li>
-            <li>Gebruik absolute paden vanaf de root: <code>/images/png-bestanden/buurtconnect-logo-300x100.png</code></li>
-            <li>Bij gebruik van Next.js, overweeg het Next/Image component te gebruiken voor optimalisatie</li>
-        </ol>
-        <p>Zie <code>vercel-info.md</code> in deze map voor meer details en probleemoplossing.</p>
     </div>
 
     <!-- Onzichtbare afbeeldingen en canvas voor conversie -->
     <div style="display:none">
-        <img id="fullLogo" src="../buurtconnect-logo.svg" crossorigin="anonymous">
-        <img id="iconOnly" src="../buurtconnect-icon.svg" crossorigin="anonymous">
+        <img id="fullLogo" src="../samenactief-logo.svg" crossorigin="anonymous">
+        <img id="iconOnly" src="../samenactief-icon.svg" crossorigin="anonymous">
         <canvas id="canvas"></canvas>
     </div>
 
@@ -161,10 +144,10 @@ function Header() {
                 downloadLinks.innerHTML = '';
                 
                 // Genereer de PNG-bestanden
-                generatePNG(fullLogo, 300, 100, 'buurtconnect-logo-300x100.png');
-                generatePNG(fullLogo, 1200, 400, 'buurtconnect-logo-1200x400.png');
-                generatePNG(iconOnly, 100, 100, 'buurtconnect-icon-100x100.png');
-                generatePNG(iconOnly, 400, 400, 'buurtconnect-icon-400x400.png');
+                generatePNG(fullLogo, 300, 100, 'samenactief-logo-300x100.png');
+                generatePNG(fullLogo, 1200, 400, 'samenactief-logo-1200x400.png');
+                generatePNG(iconOnly, 100, 100, 'samenactief-icon-100x100.png');
+                generatePNG(iconOnly, 400, 400, 'samenactief-icon-400x400.png');
             }
             
             function generatePNG(img, width, height, filename) {
