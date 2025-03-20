@@ -13,12 +13,14 @@ import Auth from "@/pages/auth";
 import CenterAdmin from "@/pages/center-admin";
 import ActivityStats from "@/pages/activity-stats";
 import Help from "@/pages/help";
+import Startpagina from "@/pages/startpagina";
 import Navigation from "@/components/navigation";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={Home} />
+      <Route path="/startpagina" component={Startpagina} />
       <Route path="/centers/:id" component={Center} />
       <Route path="/activities/:id" component={Activity} />
       <Route path="/profile" component={Profile} />
