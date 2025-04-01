@@ -65,7 +65,7 @@ try {
   pool = new Pool({ 
     connectionString: DATABASE_URL,
     ssl: {
-      rejectUnauthorized: false // Dit kan nodig zijn voor sommige SSL configuraties
+      rejectUnauthorized: true
     }
   });
 
