@@ -8,6 +8,7 @@ import multer from "multer";
 import path from "path";
 import { mkdir } from "fs/promises";
 import express from "express";
+import { db, pool } from "./db";
 
 // Middleware om te controleren of een gebruiker een center admin is
 function isCenterAdmin(req: Request, res: Response, next: NextFunction) {
@@ -725,6 +726,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error getting registrations:', error);
       res.status(500).json({ message: "Er is een fout opgetreden" });
+    }
+  });
+
+  // Database info endpoint
+  app.get("/api/db-info", async (req, res) => {
+    try {
+      const result = await pool.query('SELECT NOW(), current_database(), current_user, version()');
+      const dbInfo = {
+        timestamp: result.rows[0].now,
+        database: result.rows[0].current_database,
+        user: result.rows[0].current_user,
+        version: result.rows[0].version,
+        host: process.env.DATABASE_URL?.split('@')[1]?.split('/')[0] || 'unknown'
+      };
+      res.json(dbInfo);
+    } catch (error) {
+      console.error('Error fetching database info:', error);
+      res.status(500).json({ error: 'Failed to fetch database info' });
     }
   });
 

@@ -58,6 +58,15 @@ if (!DATABASE_URL) {
 console.log("Connecting to database...");
 console.log("Database URL:", DATABASE_URL.replace(/:[^:]*@/, ':****@')); // Log URL zonder wachtwoord
 
+// Parse de database URL voor extra informatie
+const dbUrl = new URL(DATABASE_URL);
+console.log("Database details:", {
+  host: dbUrl.hostname,
+  database: dbUrl.pathname.slice(1),
+  user: dbUrl.username,
+  ssl: dbUrl.searchParams.get('sslmode')
+});
+
 // Create the connection pool with extra logging
 let pool: Pool;
 try {
@@ -70,7 +79,7 @@ try {
   });
 
   // Test database connection
-  pool.query('SELECT NOW()', (err, res) => {
+  pool.query('SELECT NOW(), current_database(), current_user, version()', (err, res) => {
     if (err) {
       console.error('Database connection error:', err);
       console.error('Error details:', {
@@ -79,6 +88,12 @@ try {
       });
     } else {
       console.log('Database connected successfully');
+      console.log('Database info:', {
+        timestamp: res.rows[0].now,
+        database: res.rows[0].current_database,
+        user: res.rows[0].current_user,
+        version: res.rows[0].version
+      });
     }
   });
 } catch (error) {
