@@ -18,13 +18,25 @@ console.log("Loading .env from:", envPath);
 // Controleer of het bestand bestaat
 if (fs.existsSync(envPath)) {
   console.log("Env file exists");
-  console.log("Env file contents:", fs.readFileSync(envPath, 'utf8'));
+  const envContent = fs.readFileSync(envPath, 'utf8').trim();
+  console.log("Env file contents:", envContent);
+  
+  // Parse de .env file handmatig
+  const envVars = envContent.split('\n').reduce((acc, line) => {
+    const [key, value] = line.split('=').map(s => s.trim());
+    if (key && value) {
+      acc[key] = value;
+    }
+    return acc;
+  }, {} as Record<string, string>);
+  
+  // Zet de environment variables
+  Object.entries(envVars).forEach(([key, value]) => {
+    process.env[key] = value;
+  });
 } else {
   console.log("Env file does not exist!");
 }
-
-const result = config({ path: envPath });
-console.log("Env loading result:", result);
 
 // Configure WebSocket for Neon serverless
 neonConfig.webSocketConstructor = ws;
