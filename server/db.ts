@@ -5,6 +5,7 @@ import * as schema from "@shared/schema";
 import { config } from "dotenv";
 import path from "path";
 import { fileURLToPath } from "url";
+import fs from 'fs';
 
 // Laad .env bestand
 const __filename = fileURLToPath(import.meta.url);
@@ -13,6 +14,15 @@ const __dirname = path.dirname(__filename);
 // Laad .env bestand met absolute path
 const envPath = path.resolve(__dirname, "..", ".env");
 console.log("Loading .env from:", envPath);
+
+// Controleer of het bestand bestaat
+if (fs.existsSync(envPath)) {
+  console.log("Env file exists");
+  console.log("Env file contents:", fs.readFileSync(envPath, 'utf8'));
+} else {
+  console.log("Env file does not exist!");
+}
+
 const result = config({ path: envPath });
 console.log("Env loading result:", result);
 
