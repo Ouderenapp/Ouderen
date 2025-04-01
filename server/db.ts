@@ -14,8 +14,7 @@ config({ path: path.resolve(__dirname, "..", ".env") });
 // Configure WebSocket for Neon serverless
 neonConfig.webSocketConstructor = ws;
 
-// Gebruik hardcoded connection string als fallback
-const DATABASE_URL = process.env.DATABASE_URL || "postgresql://neondb_owner:npg_hGLq6WZ1cRAb@ep-nameless-leaf-a9z0109h-pooler.gwc.azure.neon.tech/neondb?sslmode=require";
+const DATABASE_URL = process.env.DATABASE_URL;
 
 if (!DATABASE_URL) {
   throw new Error(
@@ -23,8 +22,20 @@ if (!DATABASE_URL) {
   );
 }
 
+console.log("Connecting to database...");
+console.log("Database URL:", DATABASE_URL.replace(/:[^:]*@/, ':****@')); // Log URL zonder wachtwoord
+
 // Create the connection pool
 export const pool = new Pool({ connectionString: DATABASE_URL });
+
+// Test database connection
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('Database connection error:', err);
+  } else {
+    console.log('Database connected successfully');
+  }
+});
 
 // Create the drizzle database instance
 export const db = drizzle(pool, { schema });
