@@ -647,23 +647,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Update the register route to properly create a center for admin users
   app.post("/api/register", async (req, res, next) => {
     try {
+      console.log("Received registration request:", {
+        username: req.body.username,
+        displayName: req.body.displayName,
+        village: req.body.village,
+        neighborhood: req.body.neighborhood
+      });
+
       const existingUser = await storage.getUserByUsername(req.body.username);
       if (existingUser) {
+        console.log("Username already exists:", req.body.username);
         return res.status(400).json({ message: "Gebruikersnaam is al in gebruik" });
       }
 
+      console.log("Creating new user...");
       const user = await storage.createUser({
         ...req.body,
-        password: await hashPassword(req.body.password),
+        password: await hashPassword(req.body.password)
       });
+      console.log("User created successfully:", { id: user.id, username: user.username });
 
-      // Send welcome email if email service is configured
       if (process.env.SENDGRID_API_KEY) {
+        console.log("Sending welcome email...");
         await sendWelcomeEmail(user.username, user.displayName);
+        console.log("Welcome email sent successfully");
       }
 
-      // Als dit een buurthuis beheerder is, maak dan ook een buurthuis aan
-      if (user.role === 'center_admin') {
+      if (user.role === "center_admin") {
+        console.log("Creating center for admin user...");
         const center = await storage.createCenter({
           name: user.displayName,
           address: `${user.neighborhood}, ${user.village}`,
@@ -672,16 +683,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           adminId: user.id,
           village: user.village
         });
-
-        console.log('Created center:', center);
+        console.log("Center created successfully:", { id: center.id, name: center.name });
       }
 
       req.login(user, (err) => {
-        if (err) return next(err);
+        if (err) {
+          console.error("Login error after registration:", err);
+          return next(err);
+        }
+        console.log("User logged in successfully after registration");
         res.status(201).json(user);
       });
     } catch (err) {
-      console.error('Error in register route:', err);
+      console.error("Error in register route:", err);
       next(err);
     }
   });
