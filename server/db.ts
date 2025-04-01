@@ -9,12 +9,19 @@ import { fileURLToPath } from "url";
 // Laad .env bestand
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-config({ path: path.resolve(__dirname, "..", ".env") });
+
+// Laad .env bestand met absolute path
+const envPath = path.resolve(__dirname, "..", ".env");
+console.log("Loading .env from:", envPath);
+const result = config({ path: envPath });
+console.log("Env loading result:", result);
 
 // Configure WebSocket for Neon serverless
 neonConfig.webSocketConstructor = ws;
 
 const DATABASE_URL = process.env.DATABASE_URL;
+console.log("DATABASE_URL is set:", !!DATABASE_URL);
+console.log("All environment variables:", Object.keys(process.env));
 
 if (!DATABASE_URL) {
   throw new Error(
