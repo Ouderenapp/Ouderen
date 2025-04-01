@@ -92,12 +92,12 @@ process.on('unhandledRejection', (reason, promise) => {
       log("Static serving setup complete");
     }
 
-    const port = 5000;
+    const port = process.env.PORT || 5000;
     server.listen({
       port,
-      host: "localhost"
+      host: "0.0.0.0"
     }, () => {
-      console.log(`Server started successfully on http://localhost:${port}`);
+      console.log(`Server started successfully on port ${port}`);
       log(`Server started successfully, serving on port ${port}`);
     });
   } catch (error) {
