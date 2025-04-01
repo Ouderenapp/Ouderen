@@ -18,7 +18,9 @@ console.log("Loading .env from:", envPath);
 // Controleer of het bestand bestaat
 if (fs.existsSync(envPath)) {
   console.log("Env file exists");
-  const envContent = fs.readFileSync(envPath, 'utf8').trim();
+  const envContent = fs.readFileSync(envPath, 'utf8')
+    .replace(/^\uFEFF/, '') // Verwijder BOM
+    .trim();
   console.log("Env file contents:", envContent);
   
   // Parse de .env file handmatig
