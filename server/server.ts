@@ -19,8 +19,16 @@ const port = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
+// Serve static files from dist/public
+app.use(express.static(path.join(__dirname, "..", "dist", "public")));
+
 // Routes registreren
 registerRoutes(app).then(() => {
+  // Catch-all route to serve index.html for client-side routing
+  app.get("*", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "dist", "public", "index.html"));
+  });
+
   app.listen(port, () => {
     console.log(`Server running on port ${port}`);
   });
