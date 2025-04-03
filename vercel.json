@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "framework": "vite",
@@ -10,6 +11,36 @@
     {
       "source": "/(.*)",
       "destination": "/index.html"
+=======
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "buildCommand": "npm run build",
+        "outputDirectory": "dist/public"
+      }
+    },
+    {
+      "src": "server/index.ts",
+      "use": "@vercel/node"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "server/index.ts"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "dist/public/$1",
+      "continue": true
+    },
+    {
+      "src": "/(.*)",
+      "dest": "dist/public/index.html"
+>>>>>>> parent of 3d21804 (Naam veranderd naar SamenActief en Vercel configuratie verwijderd)
     }
   ]
 } 
