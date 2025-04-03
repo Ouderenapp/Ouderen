@@ -13,7 +13,7 @@ export function OnboardingGuide() {
 
   const steps = [
     {
-      title: "Welkom bij de SamenActief App",
+      title: "Welkom bij de BuurtConnect App",
       description: "Wij helpen u graag om deel te nemen aan activiteiten in uw buurt. Deze app is speciaal ontwikkeld om u gemakkelijk de weg te wijzen. U hoeft geen ervaring met computers te hebben - wij leggen alles stap voor stap uit.",
       icon: Building2,
     },
