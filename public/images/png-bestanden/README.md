@@ -1,21 +1,13 @@
-# BuurtConnect PNG Bestanden
+# SamenActief PNG Bestanden
 
-Deze map bevat PNG-versies van het BuurtConnect logo en icoon, klaar voor gebruik in presentaties, documenten en andere toepassingen.
+Deze map bevat PNG-versies van het SamenActief logo en icoon, klaar voor gebruik in presentaties, documenten en andere toepassingen.
 
 ## Beschikbare bestanden
 
-- `buurtconnect-logo-300x100.png` - Het volledige logo met tekst (300px breed)
-- `buurtconnect-logo-1200x400.png` - Het volledige logo met tekst in hoge resolutie (1200px breed)
-- `buurtconnect-icon-100x100.png` - Alleen het icoon zonder tekst (100px)
-- `buurtconnect-icon-400x400.png` - Alleen het icoon zonder tekst in hoge resolutie (400px)
-
-## Gebruik op Vercel
-
-Voor gebruik op Vercel (of andere cloud hosting), zijn er meerdere opties:
-
-1. **Gedownloade PNG-bestanden** - Gebruik de PNG-bestanden in deze map
-2. **Base64-encoded versie** - Zie `vercel-ready.md` voor een direct bruikbare base64-encoded versie
-3. **Generating op Vercel** - Zie `vercel-info.md` voor meer details over het gebruik van afbeeldingen op Vercel
+- `samenactief-logo-300x100.png` - Het volledige logo met tekst (300px breed)
+- `samenactief-logo-1200x400.png` - Het volledige logo met tekst in hoge resolutie (1200px breed)
+- `samenactief-icon-100x100.png` - Alleen het icoon zonder tekst (100px)
+- `samenactief-icon-400x400.png` - Alleen het icoon zonder tekst in hoge resolutie (400px)
 
 ## De PNG bestanden genereren
 
@@ -43,5 +35,5 @@ PNG-bestanden zijn geschikt voor:
 ## Originele vector bestanden
 
 Als je het originele SVG-bestand nodig hebt (vector formaat dat oneindig schaalbaar is), kun je deze vinden in de hoofdmap:
-- `/images/buurtconnect-logo.svg`
-- `/images/buurtconnect-icon.svg` 
+- `/images/samenactief-logo.svg`
+- `/images/samenactief-icon.svg` 
