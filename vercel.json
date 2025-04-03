@@ -1,5 +1,6 @@
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
   "buildCommand": "npm run build",
   "outputDirectory": "dist/public",
   "framework": "vite",
@@ -12,6 +13,8 @@
       "source": "/(.*)",
       "destination": "/index.html"
 =======
+=======
+>>>>>>> parent of 3d21804 (Naam veranderd naar SamenActief en Vercel configuratie verwijderd)
   "version": 2,
   "builds": [
     {
@@ -40,6 +43,9 @@
     {
       "src": "/(.*)",
       "dest": "dist/public/index.html"
+<<<<<<< HEAD
+>>>>>>> parent of 3d21804 (Naam veranderd naar SamenActief en Vercel configuratie verwijderd)
+=======
 >>>>>>> parent of 3d21804 (Naam veranderd naar SamenActief en Vercel configuratie verwijderd)
     }
   ]
