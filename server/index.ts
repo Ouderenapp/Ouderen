@@ -128,6 +128,7 @@ if (process.env.NODE_ENV !== 'vercel') {
     }
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 
     const port = process.env.PORT || 5000;
     server.listen({
@@ -142,6 +143,10 @@ if (process.env.NODE_ENV !== 'vercel') {
     process.exit(1);
   }
 })();
+=======
+  })();
+}
+>>>>>>> parent of 3d21804 (Naam veranderd naar SamenActief en Vercel configuratie verwijderd)
 =======
   })();
 }
