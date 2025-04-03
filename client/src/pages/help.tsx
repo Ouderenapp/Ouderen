@@ -25,7 +25,7 @@ export default function HelpPage() {
       <Card className="border-2">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-3xl">
-            <Book className="h-8 w-8 text-primary" /> Hoe gebruikt u deze app?
+            <Book className="h-8 w-8 text-primary" /> Hoe gebruikt u deze app? 
           </CardTitle>
           <CardDescription className="text-xl">
             Hier vindt u uitleg over de belangrijkste functies
